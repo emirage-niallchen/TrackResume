@@ -21,7 +21,7 @@ jobs:
         TAG_EXISTS=$(git tag --list)
         if [ -z "$TAG_EXISTS" ]; then
           echo "No tags found, skipping build."
-          exit 0
+          exit 1
         fi
 
     - name: Get the version from git tag
