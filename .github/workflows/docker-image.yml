@@ -15,6 +15,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Check if a tag exists
+      id: check_tag
+      run: |
+        TAG_EXISTS=$(git tag --list)
+        if [ -z "$TAG_EXISTS" ]; then
+          echo "No tags found, skipping build."
+          exit 0
+        fi
+
     - name: Get the version from git tag
       id: version
       run: |
