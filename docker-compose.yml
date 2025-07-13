@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  app:
+    image: niallchen/track-resume:latest
+    container_name: TrackResume
+    restart: unless-stopped
+    ports:
+      - "53973:3000"
+    environment:
+      # 数据库配置
+      MYSQL_DATABASE_URL: mysql://user:password@ip:port/cv_dev?connection_limit=5&connect_timeout=60&acquire_timeout=60&timeout=60&pool_timeout=60
+      
+      # 认证配置
+      JWT_SECRET: f14w5er468ergwd486jh31gh3e5t4h863yr431fv165tr4uj86r
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: rwgq5ret6746f4e6ew7t684d6wq464fd6a74tg867
+      
+      NEXT_TELEMETRY_DISABLED: 1
+    volumes:
+      # 挂载上传文件目录，分别挂载子目录，避免覆盖整个public
+      - ./public/uploads:/app/public/uploads
+      - ./public/project:/app/public/project
+
