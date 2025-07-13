@@ -7,6 +7,7 @@ import { Project } from "@prisma/client";
 import { ProjectVO } from "@/app/api/projects/route";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 interface ProjectListProps {
   projects: ProjectVO[];
@@ -63,10 +64,11 @@ export function ProjectList({ projects, onEdit, onDelete }: ProjectListProps) {
           {/* 图片始终在顶部，无图片时占位，内容始终在底部 */}
           {project.images[0] ? (
             <div className="aspect-video relative overflow-hidden">
-              <img
+              <Image
                 src={project.images[0].path}
                 alt={project.images[0].alt || project.name}
-                className="object-cover w-full h-full"
+                fill
+                className="object-cover"
               />
             </div>
           ) : (

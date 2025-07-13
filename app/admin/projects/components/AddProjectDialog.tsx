@@ -17,6 +17,7 @@ import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Switch } from "@/components/ui/switch";
+import Image from "next/image";
 
 /**
  * 项目表单数据校验规则
@@ -297,7 +298,12 @@ export const AddProjectDialog: React.FC<AddProjectDialogProps> = React.memo(({ o
             <div className="flex flex-wrap gap-4">
               {imagePreviewUrls.map((url, index) => (
                 <div key={index} className="relative w-24 h-24">
-                  <img src={url} alt={`Preview ${index}`} className="w-full h-full object-cover rounded" />
+                  <Image 
+                    src={url} 
+                    alt={`Preview ${index}`} 
+                    fill
+                    className="object-cover rounded"
+                  />
                   <Button
                     type="button"
                     variant="destructive"
@@ -472,4 +478,4 @@ export const AddProjectDialog: React.FC<AddProjectDialogProps> = React.memo(({ o
   );
 });
 
-AddProjectDialog.displayName = "AddProjectDialog"; 
+AddProjectDialog.displayName = "AddProjectDialog";

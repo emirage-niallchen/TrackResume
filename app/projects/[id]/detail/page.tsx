@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import Image from 'next/image';
 import { ExternalLink } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface Project {
   id: string;
@@ -113,7 +114,16 @@ export default function ProjectDetailPage() {
     table: ({ children }) => <table className={markdownStyles.prose.table}>{children}</table>,
     th: ({ children }) => <th className={markdownStyles.prose.th}>{children}</th>,
     td: ({ children }) => <td className={markdownStyles.prose.td}>{children}</td>,
-    img: ({ src, alt }) => <img src={src} alt={alt} className={markdownStyles.prose.img} />,
+    img: ({ src, alt }) => (
+      <div className="relative w-full my-4 h-64">
+        <Image 
+          src={src || ""} 
+          alt={alt || ""} 
+          fill 
+          className={cn(markdownStyles.prose.img, "object-contain")}
+        />
+      </div>
+    ),
     hr: () => <hr className={markdownStyles.prose.hr} />,
   };
 

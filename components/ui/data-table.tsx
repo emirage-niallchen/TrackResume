@@ -64,7 +64,7 @@ export function DataTable<TData extends { id: string }>({
     if (headerCheckboxRef.current) {
       headerCheckboxRef.current.indeterminate = table.getIsSomeRowsSelected() && !table.getIsAllRowsSelected()
     }
-  }, [table.getIsSomeRowsSelected(), table.getIsAllRowsSelected()])
+  }, [table]);
 
   if (loading) {
     return <div className="text-center py-4">加载中...</div>
