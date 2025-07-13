@@ -2,20 +2,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { TechVO } from "@/app/api/techs/route";
 import { useEffect } from "react";
+import Image from "next/image";
 
 export function TechStackGrid({ techs }: { techs: TechVO[] }) {
   console.log('TechStackGrid received techs:', techs);
   
-  if (!techs) {
-    console.log('techs is undefined or null');
-    return null;
-  }
-  
-  if (!Array.isArray(techs)) {
-    console.log('techs is not an array:', typeof techs);
-    return null;
-  }
-
   // 添加自定义样式到页面
   useEffect(() => {
     // 创建并添加样式标签
@@ -32,6 +23,16 @@ export function TechStackGrid({ techs }: { techs: TechVO[] }) {
       document.head.removeChild(styleTag);
     };
   }, []);
+  
+  if (!techs) {
+    console.log('techs is undefined or null');
+    return null;
+  }
+  
+  if (!Array.isArray(techs)) {
+    console.log('techs is not an array:', typeof techs);
+    return null;
+  }
 
   return (
     <section className="py-16" id="tech-stack">
@@ -48,7 +49,14 @@ export function TechStackGrid({ techs }: { techs: TechVO[] }) {
               <CardHeader className="flex flex-col items-center gap-2 min-h-[120px] justify-center">
                 {tech.icon ? (
                   tech.icon.startsWith('data:image') ? (
-                    <img src={tech.icon} alt={tech.name} className="w-16 h-16 object-contain mb-2 rounded" />
+                    <div className="relative w-16 h-16 mb-2">
+                      <Image 
+                        src={tech.icon} 
+                        alt={tech.name} 
+                        fill
+                        className="object-contain rounded" 
+                      />
+                    </div>
                   ) : (
                     <div className="w-16 h-16 flex items-center justify-center mb-2" dangerouslySetInnerHTML={{ __html: tech.icon }} />
                   )

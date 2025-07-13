@@ -22,6 +22,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {ChevronsUpDown, X, Upload } from "lucide-react";
+import Image from "next/image";
 
 interface Tag {
   id: string;
@@ -200,10 +201,11 @@ export function EditTechDialog({
             <div className="flex items-center gap-4">
               {formData.icon && (
                 <div className="relative w-16 h-16 border rounded overflow-hidden">
-                  <img
+                  <Image
                     src={formData.icon}
                     alt="Tech icon"
-                    className="w-full h-full object-contain"
+                    fill
+                    className="object-contain"
                   />
                   <Button
                     type="button"
