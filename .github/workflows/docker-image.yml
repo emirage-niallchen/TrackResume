@@ -21,11 +21,14 @@ jobs:
         TAG_EXISTS=$(git tag --list)
         if [ -z "$TAG_EXISTS" ]; then
           echo "No tags found, skipping build."
-          exit 1
+          echo "TAG_EXISTS=false" >> $GITHUB_ENV
+        else
+          echo "TAG_EXISTS=true" >> $GITHUB_ENV
         fi
 
     - name: Get the version from git tag
       id: version
+      if: env.TAG_EXISTS == 'true'
       run: |
         VERSION=$(git describe --tags --abbrev=0)
         echo "VERSION=$VERSION" >> $GITHUB_ENV
@@ -38,8 +41,16 @@ jobs:
 
     - name: Build Docker image
       run: |
+        if [ -z "${{ env.VERSION }}" ]; then
+          echo "No version found, skipping image build."
+          exit 0
+        fi
         docker build -t niallchen/TrackResume:${{ env.VERSION }} .
 
     - name: Push Docker image
       run: |
+        if [ -z "${{ env.VERSION }}" ]; then
+          echo "No version found, skipping push."
+          exit 0
+        fi
         docker push niallchen/TrackResume:${{ env.VERSION }}
