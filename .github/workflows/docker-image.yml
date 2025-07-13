@@ -44,7 +44,7 @@ jobs:
           echo "No version found, skipping image build."
           exit 0
         fi
-        docker build -t niallchen/TrackResume:${{ env.VERSION }} .
+        docker build -t niallchen/track-resume:${{ env.VERSION }} .
 
     - name: Push Docker image
       run: |
@@ -52,4 +52,4 @@ jobs:
           echo "No version found, skipping push."
           exit 0
         fi
-        docker push niallchen/TrackResume:${{ env.VERSION }}
+        docker push niallchen/track-resume:${{ env.VERSION }}
