@@ -1,0 +1,257 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("SQLITE_DATABASE_URL")
+}
+
+// ... existing code ... 
+
+
+// models/Link.prisma
+model Link {
+  id        String   @id @default(cuid())
+  type      String
+  content   String
+  description String   // 自定义描述文本
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  name      String?
+  email     String?   @unique
+  password  String
+  description String   // 自定义描述文本
+  avatar    String?  // base64 格式的头像数据
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  background String?  // 背景图片
+}
+
+
+model CustomField {
+  id          String   @id @default(cuid())
+  label       String   // 字段名称，如"GitHub"、"博客"
+  value       String   // 字段值
+  type        String   // 字段类型：text/link/email/phone
+  description String?  // 字段描述
+  order       Int      @default(0)  // 显示顺序
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 附件
+model File {
+  id          String     @id @default(cuid())
+  name        String   
+  path        String   // 存储路径
+  type        String   // 文件类型 (MIME type)
+  size        Int      // 文件大小 (bytes)
+  isPublished Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  // 多对多关系
+  tags        FileTag[]
+}
+
+model Location {
+  id          String   @id @default(cuid())
+  latitude    Float    // 纬度
+  longitude   Float    // 经度
+  address     String   // 地址描述
+  description String   // 自定义描述文本
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 技术栈
+model Tech {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  description String
+  icon        String?      //直接上传图片进行编码
+  link        String?
+  bgColor     String
+  order       Int         @default(0)
+  isPublished Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  // 多对多关系
+  tags        TechTag[]
+}
+
+// 标签
+model Tag {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  description String?
+  color       String
+  order       Int         @default(0)
+  isPublished Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  // 反向关系
+  files       FileTag[]
+  techs       TechTag[]
+  projects    ProjectTag[]
+  resumes     ResumeTag[]
+}
+
+// 项目
+model Project {
+  id          String         @id @default(cuid())
+  name        String    
+  jobRole     String? // 职位
+  jobTech     String? // 技术栈
+  startTime   DateTime? // 开始时间
+  endTime     DateTime? // 结束时间
+  description String    
+  detail      String? // 详情界面路径
+  images      ProjectImage[]
+  links       ProjectLink[]
+  tags        ProjectTag[]   // 新增多对多关系
+  order       Int           @default(0)
+  isPublished Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model ProjectImage {
+  id        String   @id @default(cuid())
+  path       String   // 图片URL
+  alt       String?  // 图片描述
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProjectLink {
+  id        String   @id @default(cuid())
+  label     String   // 链接标签
+  url       String   // 链接URL
+  order     Int      @default(0)
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Page {
+  id          String   @id @default(cuid())
+  slug        String   @unique  // URL 友好的路径，如 'about-me'
+  title       String   // 页面标题
+  content     String   // MDX 内容
+  path        String   // 文件在本地存储的路径
+  isPublished Boolean  @default(false)
+  metadata    String?  // 存储列化的 JSON 字符串
+  order       Int      @default(0)  // 导航顺序
+  parentId    String?  // 父页面 ID，用于层级结构
+  // parent      Page?    @relation("PageToPage", fields: [parentId], references: [id])
+  // children    Page[]   @relation("PageToPage")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+
+
+
+// 新增关联表：File-Tag
+model FileTag {
+  id        String   @id @default(cuid())
+  file      File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  fileId    String
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId     String
+  createdAt DateTime @default(now())
+
+  @@unique([fileId, tagId])
+}
+
+// 新增关联表：Tech-Tag
+model TechTag {
+  id        String   @id @default(cuid())
+  tech      Tech     @relation(fields: [techId], references: [id], onDelete: Cascade)
+  techId    String
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId     String
+  createdAt DateTime @default(now())
+
+  @@unique([techId, tagId])
+}
+
+// 新增关联表：Project-Tag
+model ProjectTag {
+  id        String   @id @default(cuid())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId     String
+  createdAt DateTime @default(now())
+
+  @@unique([projectId, tagId])
+}
+
+model Inbox {
+  id          String   @id @default(cuid())
+  type        String   // email, phone, etc.
+  value       String   // 具体的联系方式值
+  description String?  // 描述或留言
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model ResumeSection {
+  id          String   @id @default(cuid())
+  name        String   @unique  // 部分名称，如 "projects", "techs", "about"
+  label       String   // 显示名称，如 "项目经历", "技术栈", "关于我"
+  description String?  // 描述
+  type        String   // 部分类型：basic(基本信息), list(列表), grid(网格), custom(自定义)
+  component   String   // 对应的组件名称
+  isEnabled   Boolean  @default(true)  // 是否启用该部分
+  isPublished Boolean  @default(false)  // 是否公开显示
+  order       Int      @default(0)      // 显示顺序
+  config      String?  // JSON 格式的额外配置
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 履历表
+model Resume {
+  id          String   @id @default(cuid())
+  name        String   // 履历名称，如"工作经历"、"教育经历"
+  description String   // 详细描述
+  startTime   DateTime // 开始时间
+  endTime     DateTime? // 结束时间，可为空表示至今
+  location    String?  // 地点，如公司地点、学校地点
+  title       String?  // 职位或学位
+  organization String? // 组织名称，如公司名、学校名
+  highlights  String?  // JSON格式存储的重点成就或详细信息
+  order       Int      @default(0) // 显示顺序
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  // 添加多对多关系
+  tags        ResumeTag[]
+}
+
+// 新增关联表：Resume-Tag
+model ResumeTag {
+  id        String   @id @default(cuid())
+  resume    Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  resumeId  String
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId     String
+  createdAt DateTime @default(now())
+
+  @@unique([resumeId, tagId])
+}
+
+
+
