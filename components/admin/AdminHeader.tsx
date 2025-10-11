@@ -39,7 +39,7 @@ export default function AdminHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b bg-gray-400">
+      <header className="fixed top-0 left-0 right-0 z-50 w-full border-b bg-gray-400">
         <div className="flex h-14 items-center justify-between px-4">
           {/* 左侧 Logo */}
           <div className="flex items-center">

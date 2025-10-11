@@ -164,7 +164,7 @@ export default function ProfileManager() {
 
       if (!response.ok) throw new Error("更新失败");
 
-      toast.success("个人信息已更新");
+      toast.success("基础信息已更新");
     } catch (error) {
       toast.error("更新失败，请稍后重试");
     } finally {
@@ -274,6 +274,8 @@ export default function ProfileManager() {
           {loading ? "保存中..." : "保存更改"}
         </Button>
       </form>
+            
     </Form>
+
   );
 } 

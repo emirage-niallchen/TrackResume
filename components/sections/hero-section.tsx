@@ -4,9 +4,20 @@ import { Admin, CustomField } from "@prisma/client";
 import Image from "next/image";
 import { FileVO } from "@/app/api/files/route";
 import { FileDownloads } from "./file-downloads";
+import { useWebsiteSettings } from "@/lib/hooks/useWebsiteSettings";
 export function HeroSection({ adminData, customFields, files }: { adminData: Admin, customFields: CustomField[], files: FileVO[] }) {
+  const { settings } = useWebsiteSettings();
+
   return (
     <section className="relative bg-gradient-to-r from-primary/20 to-primary/5 py-24 overflow-hidden">
+      {/* 网站标题显示 */}
+      {settings?.websiteTitle && (
+        <div className="absolute top-4 left-4 z-20">
+          <h1 className="text-2xl md:text-3xl font-bold text-primary bg-background/80 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg">
+            {settings.websiteTitle}
+          </h1>
+        </div>
+      )}
       {/* 背景图层 */}
       {adminData.background && adminData.background.trim() !== "" && (
         <Image

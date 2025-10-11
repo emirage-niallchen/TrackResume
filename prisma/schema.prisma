@@ -29,6 +29,13 @@ model Admin {
   endpoint String?
 }
 
+model Settings {
+  id        String   @id @default(cuid())
+  websiteTitle String?  // 网站标题
+  favicon String?  @db.LongText  // favicon base64 数据
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
 model CustomField {
   id          String   @id @default(cuid())
   label       String   // 字段名称，如"GitHub"、"博客"

@@ -50,11 +50,10 @@ export function TechStackGrid({ techs }: { techs: TechVO[] }) {
                 {tech.icon ? (
                   tech.icon.startsWith('data:image') ? (
                     <div className="relative w-16 h-16 mb-2">
-                      <Image 
-                        src={tech.icon} 
-                        alt={tech.name} 
-                        fill
-                        className="object-contain rounded" 
+                      <img
+                        src={tech.icon}
+                        alt={tech.name}
+                        className="object-contain rounded w-full h-full"
                       />
                     </div>
                   ) : (

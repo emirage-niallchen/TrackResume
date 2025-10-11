@@ -93,7 +93,7 @@ export default function HomePage() {
   
   // 导航项配置
   const navItems: NavItem[] = [
-    { id: 'hero-section', title: '个人信息' },
+    { id: 'hero-section', title: '基础信息' },
     { id: 'resume-timeline', title: '简历时间线' },
     { id: 'projects-showcase', title: '项目展示' },
     { id: 'tech-stack', title: '技术栈' },
@@ -106,7 +106,7 @@ export default function HomePage() {
       {/* 页面导航 */}
       <PageNavigation items={navItems} />
       
-      {/* 个人信息展示区域 */}
+      {/* 基础信息展示区域 */}
       {profileData ? (
         <div id="hero-section">
           <HeroSection adminData={profileData.admin} customFields={profileData.customFields} files={filesData || []}/>

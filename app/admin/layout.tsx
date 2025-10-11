@@ -8,13 +8,13 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="h-screen bg-gray-100 overflow-hidden fixed inset-0">
       <AdminHeader />
-      <div className="flex h-[calc(100vh-4rem)]">
+      <div className="flex h-[calc(100vh-3.5rem)] pt-14">
         <AdminSidebar />
         <main className={cn(
-          "flex-1 overflow-y-auto p-6",
-          "bg-white shadow-sm rounded-lg m-4"
+          "flex-1 overflow-y-auto",
+          "bg-white shadow-sm rounded-lg m-4 p-6"
         )}>
           {children}
         </main>

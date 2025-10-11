@@ -201,10 +201,9 @@ export function EditTechDialog({
             <div className="flex items-center gap-4">
               {formData.icon && (
                 <div className="relative w-16 h-16 border rounded overflow-hidden">
-                  <Image
+                  <img
                     src={formData.icon}
                     alt="Tech icon"
-                    fill
                     className="object-contain"
                   />
                   <Button

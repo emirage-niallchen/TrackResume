@@ -12,7 +12,7 @@ const navItems = [
     icon: "dashboard"
   },
   {
-    title: "个人信息",
+    title: "基础信息",
     href: "/admin/profile",
     icon: "profile"
   },
@@ -58,7 +58,7 @@ export default function AdminSidebar() {
   };
 
   return (
-    <nav className="w-64 bg-white shadow-sm p-4">
+    <nav className="w-64 bg-white shadow-sm p-4 h-full overflow-y-auto">
       <div className="space-y-2">
         {navItems.map((item) => (
           <Link
