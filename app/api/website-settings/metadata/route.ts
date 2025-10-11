@@ -6,7 +6,7 @@ export async function GET() {
     console.log('Fetching website metadata for layout');
     
     // 获取网站设置
-    let settings = await prisma.settings.findFirst();
+    const settings = await prisma.settings.findFirst();
     
     if (!settings) {
       // 如果没有设置，返回默认值
