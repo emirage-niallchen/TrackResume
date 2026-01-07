@@ -78,13 +78,15 @@ export default function ProfileManager() {
     fetchProfile();
   }, [form]);
 
-  const handleAvatarUpload = async (base64: string) => {
+  const handleAvatarUpload = async (file: File) => {
     try {
       setLoading(true);
+      const formData = new FormData();
+      formData.append("file", file);
+
       const response = await fetch("/api/admin/avatar", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ avatar: base64 }),
+        body: formData,
       });
 
       if (!response.ok) throw new Error("头像上传失败");
@@ -106,15 +108,16 @@ export default function ProfileManager() {
     }
   };
 
-  const handleBackgroundUpload = async (base64: string) => {
+  const handleBackgroundUpload = async (file: File) => {
     try {
       setLoading(true);
+      const formData = new FormData();
+      formData.append("file", file);
+
       const response = await fetch("/api/admin/background", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ background: base64 }),
+        body: formData,
       });
-
 
       if (!response.ok) throw new Error("背景图上传失败");
 

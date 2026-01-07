@@ -1,9 +1,5 @@
 
-
 import { NextResponse } from "next/server";
-import { readFile } from "fs/promises";
-import { join } from "path";
-import { existsSync } from "fs";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
@@ -31,12 +27,19 @@ export async function GET(
       return NextResponse.json({ error: "项目不存在" }, { status: 404 });
     }
 
-    // 获取详情文件内容
-    const detailPath = join(process.cwd(), "public", "project", "details", `${projectId}_detail.md`);
-    let content = '';
-    
-    if (existsSync(detailPath)) {
-      content = await readFile(detailPath, "utf-8");
+    // 从 S3 路径读取详情内容（project.detail）
+    let content = "";
+    if (project.detail) {
+      try {
+        const res = await fetch(project.detail);
+        if (res.ok) {
+          content = await res.text();
+        } else {
+          console.error("从 S3 获取详情文件失败:", res.status, res.statusText);
+        }
+      } catch (error) {
+        console.error("从 S3 读取项目详情失败:", error);
+      }
     }
 
     return NextResponse.json({
@@ -50,4 +53,4 @@ export async function GET(
       { status: 500 }
     );
   }
-} 
+}

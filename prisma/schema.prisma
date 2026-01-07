@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("MYSQL_DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Link {
@@ -22,17 +22,17 @@ model Admin {
   email     String?   @unique
   password  String
   description String   // 自定义描述文本
-  avatar    String?  @db.LongText  // base64 格式的头像数据
+  avatar    String?  @db.Text  // base64 格式的头像数据
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  background String?  @db.LongText  // 背景图片
+  background String?  @db.Text  // 背景图片
   endpoint String?
 }
 
 model Settings {
   id        String   @id @default(cuid())
   websiteTitle String?  // 网站标题
-  favicon String?  @db.LongText  // favicon base64 数据
+  favicon String?  @db.Text  // favicon base64 数据
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

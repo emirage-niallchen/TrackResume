@@ -5,16 +5,31 @@ import { Providers } from "@/components/providers";
 import DynamicMetadata from "@/components/common/DynamicMetadata";
 import { Metadata } from 'next';
 
-// 动态生成metadata
+// 动态生成metadata - 使用动态路由确保实时更新
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function generateMetadata(): Promise<Metadata> {
   try {
     console.log('Generating dynamic metadata for layout');
     
-    const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/website-settings/metadata`, {
-      cache: 'no-store', // 确保获取最新数据
+    // 在Docker环境中，使用内部服务名或localhost
+    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const metadataUrl = `${baseUrl}/api/website-settings/metadata`;
+    
+    console.log('Fetching metadata from:', metadataUrl);
+    
+    const response = await fetch(metadataUrl, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
     
     if (!response.ok) {
+      console.error('Failed to fetch metadata, status:', response.status);
       throw new Error('Failed to fetch metadata');
     }
     

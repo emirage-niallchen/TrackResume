@@ -1,9 +1,8 @@
 
-
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir, unlink } from "fs/promises";
-import { join, extname } from "path";
-import { existsSync } from "fs";
+import { uploadToS3, deleteFromS3 } from "@/lib/utils";
+import { extname } from "path";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,26 +13,39 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "缺少文件或项目ID" }, { status: 400 });
     }
 
+    // 查询项目，准备清理旧的详情文件
+    const project = await prisma.project.findUnique({
+      where: { id: projectId }
+    });
+
+    // 如果已有详情路径，先尝试从 S3 删除旧文件
+    if (project?.detail) {
+      try {
+        await deleteFromS3(project.detail);
+      } catch (error) {
+        console.error("删除旧详情文件失败:", error);
+      }
+    }
+
     // 获取扩展名
     const originalName = file.name;
     const ext = extname(originalName);
     const fileName = `${projectId}_detail${ext}`;
-    const dir = join(process.cwd(), "public", "project", "details");
-    if (!existsSync(dir)) {
-      await mkdir(dir, { recursive: true });
-    }
-    const filePath = join(dir, fileName);
 
-    // 如果文件已存在，先删除
-    if (existsSync(filePath)) {
-      await unlink(filePath);
-    }
-
+    // 上传到 S3
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    await writeFile(filePath, buffer);
-    const publicPath = `/project/details/${fileName}`;
-    return NextResponse.json({ path: publicPath });
+    const fileUrl = await uploadToS3(buffer, fileName, file.type, "project/details");
+
+    // 将详情路径写入项目表
+    await prisma.project.update({
+      where: { id: projectId },
+      data: {
+        detail: fileUrl,
+      },
+    });
+
+    return NextResponse.json({ path: fileUrl });
   } catch (error) {
     console.error("文件上传失败:", error);
     return NextResponse.json({ error: "文件上传失败" }, { status: 500 });

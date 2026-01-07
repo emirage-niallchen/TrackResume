@@ -1,10 +1,8 @@
 
-
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkAuth } from "@/lib/auth";
-import { unlink } from "fs/promises";
-import path from "path";
+import { deleteFromS3 } from "@/lib/utils";
 
 export async function PATCH(
   request: NextRequest,
@@ -97,13 +95,12 @@ export async function DELETE(
       });
     }
 
-    // 删除物理文件
-    const filepath = path.join(process.cwd(), "public", file.path);
+    // 删除S3中的文件
     try {
-      await unlink(filepath);
+      await deleteFromS3(file.path);
     } catch (error) {
-      console.error("物理文件删除失败:", error);
-      // 继续删除数据库记录，即使物理文件删除失败
+      console.error("S3文件删除失败:", error);
+      // 继续删除数据库记录，即使S3文件删除失败
     }
 
     // 删除数据库记录

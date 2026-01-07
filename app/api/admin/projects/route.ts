@@ -1,11 +1,7 @@
 
-
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { writeFile } from "fs/promises";
-import { join } from "path";
-import { mkdir } from "fs/promises";
-import { existsSync } from "fs";
+import { uploadToS3, deleteFromS3 } from "@/lib/utils";
 
 /**
  * 处理项目创建请求
@@ -50,23 +46,16 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    // 处理图片上传
+    // 处理图片上传到S3
     if (images.length > 0) {
-      const imageDir = join(process.cwd(), "public", "project", "images");
-      if (!existsSync(imageDir)) {
-        await mkdir(imageDir, { recursive: true });
-      }
-
       for (const image of images) {
         const bytes = await image.arrayBuffer();
         const buffer = Buffer.from(bytes);
-        const fileName = `${Date.now()}_${image.name}`;
-        const filePath = join(imageDir, fileName);
-        await writeFile(filePath, buffer);
+        const fileUrl = await uploadToS3(buffer, image.name, image.type, 'project/images');
 
         await prisma.projectImage.create({
           data: {
-            path: `/project/images/${fileName}`,
+            path: fileUrl,
             project: {
               connect: { id: project.id }
             }
@@ -131,7 +120,26 @@ export async function PUT(req: NextRequest) {
     });
 
     // 处理图片
-    // 删除旧图片
+    // 删除旧图片（从S3和数据库）
+    const imagesToDelete = await prisma.projectImage.findMany({
+      where: {
+        projectId: id,
+        path: {
+          notIn: oldImages.map((img: any) => img.path)
+        }
+      }
+    });
+
+    // Delete from S3
+    for (const image of imagesToDelete) {
+      try {
+        await deleteFromS3(image.path);
+      } catch (error) {
+        console.error(`Failed to delete image from S3: ${image.path}`, error);
+      }
+    }
+
+    // Delete from database
     await prisma.projectImage.deleteMany({
       where: {
         projectId: id,
@@ -141,23 +149,16 @@ export async function PUT(req: NextRequest) {
       }
     });
 
-    // 上传新图片
+    // 上传新图片到S3
     if (images.length > 0) {
-      const imageDir = join(process.cwd(), "public", "project", "images");
-      if (!existsSync(imageDir)) {
-        await mkdir(imageDir, { recursive: true });
-      }
-
       for (const image of images) {
         const bytes = await image.arrayBuffer();
         const buffer = Buffer.from(bytes);
-        const fileName = `${Date.now()}_${image.name}`;
-        const filePath = join(imageDir, fileName);
-        await writeFile(filePath, buffer);
+        const fileUrl = await uploadToS3(buffer, image.name, image.type, 'project/images');
 
         await prisma.projectImage.create({
           data: {
-            path: `/project/images/${fileName}`,
+            path: fileUrl,
             project: {
               connect: { id: project.id }
             }

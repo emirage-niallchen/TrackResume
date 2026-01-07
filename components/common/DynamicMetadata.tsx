@@ -13,7 +13,15 @@ export default function DynamicMetadata() {
       try {
         console.log('Updating page metadata on client side');
         
-        const response = await fetch('/api/website-settings/metadata');
+        const response = await fetch('/api/website-settings/metadata', {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
+        
         if (!response.ok) {
           throw new Error('Failed to fetch metadata');
         }
@@ -52,7 +60,19 @@ export default function DynamicMetadata() {
     // 延迟执行，确保页面已加载
     const timer = setTimeout(updatePageMetadata, 100);
     
-    return () => clearTimeout(timer);
+    // 添加页面可见性变化时的重新加载
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        updatePageMetadata();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   // 这个组件不渲染任何内容

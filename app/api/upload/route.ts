@@ -1,10 +1,8 @@
 
-
 import { NextResponse } from 'next/server';
-import { writeFile } from 'fs/promises';
 import { prisma } from '@/lib/prisma';
 import { checkAuth } from '@/lib/auth';
-import path from 'path';
+import { uploadToS3 } from '@/lib/utils';
 
 export async function POST(request: Request) {
   try {
@@ -23,13 +21,8 @@ export async function POST(request: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // 生成唯一的文件名
-    const fileName = `${Date.now()}-${file.name}`;
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-    const filePath = path.join(uploadDir, fileName);
-
-    // 保存文件
-    await writeFile(filePath, buffer);
+    // Upload to S3
+    const fileUrl = await uploadToS3(buffer, file.name, file.type, 'uploads');
 
     // 获取管理员ID（假设只有一个管理员账号）
     const admin = await prisma.admin.findFirst();
@@ -41,7 +34,7 @@ export async function POST(request: Request) {
     const savedFile = await prisma.file.create({
       data: {
         name: file.name,
-        path: `/uploads/${fileName}`,
+        path: fileUrl,
         type: file.type,
         size: buffer.length
       },

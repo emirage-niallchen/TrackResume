@@ -30,9 +30,17 @@ export default function WebsiteSettings() {
       setLoading(true);
       console.log('Fetching website settings from API');
       
-      const response = await fetch('/api/website-settings');
+      const response = await fetch('/api/website-settings', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch settings');
+        throw new Error(`Failed to fetch settings: ${response.status}`);
       }
       
       const data = await response.json();
@@ -40,7 +48,10 @@ export default function WebsiteSettings() {
       setWebsiteTitle(data.websiteTitle || '');
       setFaviconPreview(data.favicon ? getImageUrl(data.favicon) : null);
       
-      console.log('Settings fetched successfully');
+      console.log('Settings fetched successfully', { 
+        hasTitle: !!data.websiteTitle,
+        hasFavicon: !!data.favicon 
+      });
     } catch (error) {
       console.error('Failed to fetch settings:', error);
       toast.error('获取网站设置失败');
@@ -72,6 +83,15 @@ export default function WebsiteSettings() {
 
       const updatedSettings = await response.json();
       setSettings(updatedSettings);
+      
+      // 刷新缓存
+      try {
+        await fetch('/api/website-settings/refresh', { method: 'POST' });
+        console.log('Cache refreshed after settings update');
+      } catch (cacheError) {
+        console.warn('Failed to refresh cache:', cacheError);
+      }
+      
       toast.success('网站设置保存成功');
       console.log('Settings saved successfully');
     } catch (error) {
@@ -124,6 +144,15 @@ export default function WebsiteSettings() {
       const updatedSettings = await response.json();
       setSettings(updatedSettings);
       setFaviconPreview(base64);
+      
+      // 刷新缓存
+      try {
+        await fetch('/api/website-settings/refresh', { method: 'POST' });
+        console.log('Cache refreshed after favicon upload');
+      } catch (cacheError) {
+        console.warn('Failed to refresh cache:', cacheError);
+      }
+      
       toast.success('网站图标上传成功');
       console.log('Favicon uploaded successfully');
     } catch (error) {
@@ -177,6 +206,15 @@ export default function WebsiteSettings() {
       const updatedSettings = await response.json();
       setSettings(updatedSettings);
       setFaviconPreview(null);
+      
+      // 刷新缓存
+      try {
+        await fetch('/api/website-settings/refresh', { method: 'POST' });
+        console.log('Cache refreshed after favicon removal');
+      } catch (cacheError) {
+        console.warn('Failed to refresh cache:', cacheError);
+      }
+      
       toast.success('网站图标已移除');
       console.log('Favicon removed successfully');
     } catch (error) {

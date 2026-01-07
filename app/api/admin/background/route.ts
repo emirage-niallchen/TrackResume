@@ -1,23 +1,25 @@
-
-
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { uploadToS3, deleteFromS3 } from "@/lib/utils";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const formData = await request.formData();
+    const file = formData.get("file") as File;
     
-    if (!body || !body.background) {
+    if (!file) {
       return NextResponse.json(
-        { error: "背景图数据不能为空" },
+        { error: "背景图文件不能为空" },
         { status: 400 }
       );
     }
 
-    // 确保存储纯 base64 数据
-    const base64Data = body.background.includes('base64,') 
-      ? body.background.split('base64,')[1] 
-      : body.background;
+    if (!file.type.startsWith("image/")) {
+      return NextResponse.json(
+        { error: "请上传图片文件" },
+        { status: 400 }
+      );
+    }
 
     // 获取第一个管理员
     const admin = await prisma.admin.findFirst();
@@ -28,10 +30,25 @@ export async function POST(request: Request) {
       );
     }
 
-    // 更新数据库中的背景图
+    // 如果已有背景图，先删除S3中的旧文件
+    if (admin.background) {
+      try {
+        await deleteFromS3(admin.background);
+      } catch (error) {
+        console.error("删除旧背景图失败:", error);
+        // 继续上传新文件，不因删除失败而中断
+      }
+    }
+
+    // 上传文件到S3
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const fileUrl = await uploadToS3(buffer, file.name, file.type, 'admin/background');
+
+    // 更新数据库中的背景图URL
     const updatedAdmin = await prisma.admin.update({
       where: { id: admin.id },
-      data: { background: base64Data },
+      data: { background: fileUrl },
     });
 
     return NextResponse.json({ background: updatedAdmin.background });
@@ -43,4 +60,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-} 
+}

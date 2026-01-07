@@ -8,20 +8,18 @@ import { log } from "console";
 
 interface Props {
   currentBackground?: string | null;
-  onUpload: (base64: string) => Promise<void>;
+  onUpload: (file: File) => Promise<void>;
 }
 
 export function BackgroundUpload({ currentBackground, onUpload }: Props) {
   const [loading, setLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  // 解码Base64图片数据
-  const getImageUrl = (base64String: string | null | undefined) => {
-    if (!base64String) return null;
-    if (base64String.startsWith("data:image/")) {
-      return base64String;
-    }
-    return `data:image/jpeg;base64,${base64String}`;
+  // 获取图片URL（S3 URL）
+  const getImageUrl = (imageData: string | null | undefined) => {
+    if (!imageData) return null;
+    // 直接返回S3 URL
+    return imageData;
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,34 +31,27 @@ export function BackgroundUpload({ currentBackground, onUpload }: Props) {
       return;
     }
 
-    if (file.size > 512 * 1024 * 1024) {
-      toast.error("文件大小超出限制");
+    // 验证文件大小（限制为10MB）
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("文件大小不能超过10MB");
       return;
     }
 
-
     try {
       setLoading(true);
-      const base64 = await convertToBase64(file);
-      const base64Data = base64.split(",")[1];
-      await onUpload(base64Data);
-      setPreviewUrl(base64);
+      // 创建预览URL
+      const preview = URL.createObjectURL(file);
+      setPreviewUrl(preview);
+      // 上传文件
+      await onUpload(file);
       toast.success("背景图上传成功");
     } catch (error) {
       console.error("背景图上传失败:", error);
       toast.error("上传失败，请稍后重试");
+      setPreviewUrl(null);
     } finally {
       setLoading(false);
     }
-  };
-
-  const convertToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
-    });
   };
 
   const displayUrl = previewUrl || getImageUrl(currentBackground);

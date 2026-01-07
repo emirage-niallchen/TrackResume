@@ -1,10 +1,8 @@
 
-
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { date, z } from "zod";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { uploadToS3, deleteFromS3 } from "@/lib/utils";
 
 // 校验编辑参数
 const updateProjectSchema = z.object({
@@ -51,18 +49,32 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       // 处理图片上传
       const images = formData.getAll("images") as File[];
       const oldImages = JSON.parse(formData.get("oldImages") as string || "[]"); // 前端传递保留的图片
-      const uploadDir = join(process.cwd(), "public/uploads/projects");
-      await mkdir(uploadDir, { recursive: true });
-      // 保存新上传图片
+      
+      // 获取需要删除的图片（从数据库查询）
+      const existingImages = await prisma.projectImage.findMany({
+        where: { projectId: id }
+      });
+      const imagesToDelete = existingImages.filter(
+        img => !oldImages.some((oldImg: any) => oldImg.path === img.path)
+      );
+
+      // 从S3删除旧图片
+      for (const image of imagesToDelete) {
+        try {
+          await deleteFromS3(image.path);
+        } catch (error) {
+          console.error(`Failed to delete image from S3: ${image.path}`, error);
+        }
+      }
+
+      // 上传新图片到S3
       const savedImages = await Promise.all(
         images.map(async (image) => {
           const bytes = await image.arrayBuffer();
           const buffer = Buffer.from(bytes);
-          const fileName = `${Date.now()}-${image.name}`;
-          const filePath = join(uploadDir, fileName);
-          await writeFile(filePath, buffer);
+          const fileUrl = await uploadToS3(buffer, image.name, image.type, 'uploads/projects');
           return {
-            path: `/uploads/projects/${fileName}`,
+            path: fileUrl,
             alt: image.name
           };
         })

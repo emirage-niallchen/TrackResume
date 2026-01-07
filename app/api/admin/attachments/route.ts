@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { writeFile } from "fs/promises";
-import path from "path";
+import { uploadToS3 } from "@/lib/utils";
 
 export async function POST(request: Request) {
   try {
@@ -16,21 +15,16 @@ export async function POST(request: Request) {
       );
     }
 
-    // 生成文件存储路径
+    // Upload to S3
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const filename = `${Date.now()}-${file.name}`;
-    const uploadDir = path.join(process.cwd(), "public/uploads");
-    const filepath = path.join(uploadDir, filename);
-    
-    // 写入文件
-    await writeFile(filepath, buffer);
+    const fileUrl = await uploadToS3(buffer, file.name, file.type, 'uploads');
     
     // 保存到数据库
     const fileRecord = await prisma.file.create({
       data: {
         name: file.name,
-        path: `/uploads/${filename}`,
+        path: fileUrl,
         type: file.type,
         size: file.size,
         tags: {

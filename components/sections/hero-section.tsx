@@ -21,14 +21,10 @@ export function HeroSection({ adminData, customFields, files }: { adminData: Adm
       {/* 背景图层 */}
       {adminData.background && adminData.background.trim() !== "" && (
         <Image
-          src={
-            adminData.background.startsWith("http")
-              ? adminData.background
-              : `data:image/jpeg;base64,${adminData.background}`
-          }
+          src={adminData.background}
           alt=""
           fill
-          className="object-cover object-center w-full h-full"
+          className="object-cover object-center w-full h-full blur-sm"
           priority
           aria-hidden="true"
         />
@@ -38,13 +34,7 @@ export function HeroSection({ adminData, customFields, files }: { adminData: Adm
       <div className="relative container mx-auto px-4 flex flex-col md:flex-row items-center gap-8 z-10">
         <Avatar className="w-32 h-32 md:w-48 md:h-48 border-4 border-primary/20">
           <AvatarImage
-            src={
-              adminData.avatar && adminData.avatar.trim() !== ""
-                ? adminData.avatar.startsWith("http")
-                  ? adminData.avatar
-                  : `data:image/png;base64,${adminData.avatar}`
-                : undefined
-            }
+            src={adminData.avatar && adminData.avatar.trim() !== "" ? adminData.avatar : undefined}
           />
           <AvatarFallback>{adminData.name?.substring(0, 2) || "CV"}</AvatarFallback>
         </Avatar>
@@ -52,7 +42,7 @@ export function HeroSection({ adminData, customFields, files }: { adminData: Adm
         <div className="space-y-4">
           <h2 className="text-4xl md:text-6xl font-bold">{adminData.name || "简历"}</h2>
           <p
-            className="text-xl text-muted-foreground whitespace-pre-line indent-8"
+            className="text-lg md:text-xl text-muted-foreground whitespace-pre-line indent-8 drop-shadow-[0_1px_3px_rgba(0,0,0,0.3)]"
             dangerouslySetInnerHTML={{
               __html: `&emsp;${adminData.description?.replace(/\n/g, '<br>') || ''}`
             }}
