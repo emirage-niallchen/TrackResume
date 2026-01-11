@@ -1,5 +1,3 @@
-"use client";
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -8,6 +6,8 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 import { Card, CardContent } from "@/components/ui/card";
 import { Components } from 'react-markdown';
 import { markdownStyles } from '@/lib/styles/markdown';
@@ -37,6 +37,42 @@ export default function ProjectDetailPage() {
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const markdownSanitizeSchema = {
+    ...defaultSchema,
+    tagNames: Array.from(new Set([...(defaultSchema.tagNames ?? []), 'img'])),
+    attributes: {
+      ...(defaultSchema.attributes ?? {}),
+      a: Array.from(
+        new Set([
+          ...(((defaultSchema.attributes as Record<string, unknown>)?.a as string[]) ??
+            []),
+          'target',
+          'rel',
+        ])
+      ),
+      img: Array.from(
+        new Set([
+          ...(((defaultSchema.attributes as Record<string, unknown>)?.img as string[]) ??
+            []),
+          'src',
+          'alt',
+          'title',
+          'width',
+          'height',
+          'loading',
+          'decoding',
+          'sizes',
+          'srcset',
+        ])
+      ),
+    },
+    protocols: {
+      ...(defaultSchema.protocols ?? {}),
+      src: ['http', 'https', 'data'],
+      href: ['http', 'https', 'mailto', 'tel'],
+    },
+  };
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -105,7 +141,16 @@ export default function ProjectDetailPage() {
     h5: ({ children }) => <h5 className={markdownStyles.prose.h5}>{children}</h5>,
     h6: ({ children }) => <h6 className={markdownStyles.prose.h6}>{children}</h6>,
     p: ({ children }) => <p className={markdownStyles.prose.p}>{children}</p>,
-    a: ({ href, children }) => <a href={href} className={markdownStyles.prose.a}>{children}</a>,
+    a: ({ href, children }) => (
+      <a
+        href={href}
+        className={markdownStyles.prose.a}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {children}
+      </a>
+    ),
     blockquote: ({ children }) => <blockquote className={markdownStyles.prose.blockquote}>{children}</blockquote>,
     ul: ({ children }) => <ul className={markdownStyles.prose.ul}>{children}</ul>,
     ol: ({ children }) => <ol className={markdownStyles.prose.ol}>{children}</ol>,
@@ -114,16 +159,24 @@ export default function ProjectDetailPage() {
     table: ({ children }) => <table className={markdownStyles.prose.table}>{children}</table>,
     th: ({ children }) => <th className={markdownStyles.prose.th}>{children}</th>,
     td: ({ children }) => <td className={markdownStyles.prose.td}>{children}</td>,
-    img: ({ src, alt }) => (
-      <div className="relative w-full my-4 h-64">
-        <Image 
-          src={src || ""} 
-          alt={alt || ""} 
-          fill 
-          className={cn(markdownStyles.prose.img, "object-contain")}
+    img: ({ src, alt, ...props }) => {
+      if (!src) return null;
+      // Use native <img> to avoid next/image remote allowlist limitation for user-provided markdown.
+      // eslint-disable-next-line @next/next/no-img-element
+      return (
+        <img
+          src={src}
+          alt={alt || ''}
+          loading="lazy"
+          decoding="async"
+          className={cn(
+            markdownStyles.prose.img,
+            'max-w-full h-auto rounded-lg my-4 object-contain'
+          )}
+          {...props}
         />
-      </div>
-    ),
+      );
+    },
     hr: () => <hr className={markdownStyles.prose.hr} />,
   };
 
@@ -220,6 +273,7 @@ export default function ProjectDetailPage() {
             <div className="border-t pt-8">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw, [rehypeSanitize, markdownSanitizeSchema]]}
                 components={components}
               >
                 {content}
