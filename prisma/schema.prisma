@@ -7,273 +7,275 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum ContentLanguage {
-  zh
-  en
-}
-
-model Link {
-  id        String   @id @default(cuid())
-  language  ContentLanguage @default(zh)
-  type      String
-  content   String
-  description String   // 自定义描述文本
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 model Admin {
-  id        String   @id @default(cuid())
-  language  ContentLanguage @default(zh)
-  username  String   @unique
-  name      String?
-  email     String?   @unique
-  password  String
-  description String   // 自定义描述文本
-  avatar    String?  @db.Text  // 头像URL (S3存储)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  background String?  @db.Text  // 背景图片
-  endpoint String?
+  id          String          @id
+  username    String          @unique
+  name        String?
+  email       String?         @unique
+  password    String
+  description String
+  avatar      String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime
+  background  String?
+  endpoint    String?
+  language    ContentLanguage @default(zh)
 }
 
-model Settings {
-  id        String   @id @default(cuid())
-  language  ContentLanguage @default(zh)
-  websiteTitle String?  // 网站标题
-  favicon String?  @db.Text  // favicon URL (S3存储)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-model CustomField {
-  id          String   @id @default(cuid())
+model CallMe {
+  id          String          @id
+  label       String
+  type        String
+  iconName    String
+  value       String
+  href        String?
+  order       Int             @default(0)
+  isPublished Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime
   language    ContentLanguage @default(zh)
-  label       String   // 字段名称，如"GitHub"、"博客"
-  value       String   // 字段值
-  type        String   // 字段类型：text/link/card
-  description String?  // 字段描述
-  order       Int      @default(0)  // 显示顺序
-  isPublished Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+}
+
+model CustomField {
+  id          String          @id
+  label       String
+  value       String
+  type        String
+  description String?
+  order       Int             @default(0)
+  isPublished Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime
+  language    ContentLanguage @default(zh)
 }
 
 model File {
-  id          String     @id @default(cuid())
-  language    ContentLanguage @default(zh)
-  name        String   
-  path        String   // 存储路径
-  type        String   // 文件类型 (MIME type)
-  size        Int      // 文件大小 (bytes)
-  isPublished Boolean    @default(false)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  tags        FileTag[]
-}
-
-model Location {
-  id          String   @id @default(cuid())
-  language    ContentLanguage @default(zh)
-  latitude    Float    // 纬度
-  longitude   Float    // 经度
-  address     String   // 地址描述
-  description String   // 自定义描述文本
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model Tech {
-  id          String       @id @default(cuid())
-  language    ContentLanguage @default(zh)
+  id          String          @id
   name        String
-  description String
-  icon        String?      // 图标URL (S3存储)
-  link        String?
-  bgColor     String
-  order       Int         @default(0)
-  isPublished Boolean     @default(false)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  tags        TechTag[]
-
-  @@unique([name, language])
-}
-
-model Tag {
-  id          String       @id @default(cuid())
+  path        String
+  type        String
+  size        Int
+  isPublished Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime
   language    ContentLanguage @default(zh)
-  name        String
-  description String?
-  color       String
-  order       Int         @default(0)
-  isPublished Boolean     @default(false)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  files       FileTag[]
-  techs       TechTag[]
-  projects    ProjectTag[]
-  resumes     ResumeTag[]
-
-  @@unique([name, language])
-}
-
-model Project {
-  id          String         @id @default(cuid())
-  language    ContentLanguage @default(zh)
-  name        String    
-  jobRole     String? // 职位
-  jobTech     String? // 技术栈
-  startTime   DateTime? // 开始时间
-  endTime     DateTime? // 结束时间
-  description String    
-  detail      String? // 详情界面路径
-  images      ProjectImage[]
-  links       ProjectLink[]
-  tags        ProjectTag[]
-  order       Int           @default(0)
-  isPublished Boolean       @default(false)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-}
-
-model ProjectImage {
-  id        String   @id @default(cuid())
-  language  ContentLanguage @default(zh)
-  path       String   // 图片URL
-  alt       String?  // 图片描述
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  projectId String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model ProjectLink {
-  id        String   @id @default(cuid())
-  language  ContentLanguage @default(zh)
-  label     String   // 链接标签
-  url       String   // 链接URL
-  order     Int      @default(0)
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  projectId String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Page {
-  id          String   @id @default(cuid())
-  language    ContentLanguage @default(zh)
-  slug        String   // URL 友好的路径，如 'about-me'
-  title       String   // 页面标题
-  content     String   // MDX 内容
-  path        String   // 文件在本地存储的路径
-  isPublished Boolean  @default(false)
-  metadata    String?  // 存储列化的 JSON 字符串
-  order       Int      @default(0)  // 导航顺序
-  parentId    String?  // 父页面 ID，用于层级结构
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@unique([slug, language])
+  FileTag     FileTag[]
 }
 
 model FileTag {
-  id        String   @id @default(cuid())
-  file      File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  id        String   @id
   fileId    String
-  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
   tagId     String
   createdAt DateTime @default(now())
+  File      File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  Tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@unique([fileId, tagId])
 }
 
-model TechTag {
-  id        String   @id @default(cuid())
-  tech      Tech     @relation(fields: [techId], references: [id], onDelete: Cascade)
-  techId    String
-  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  tagId     String
-  createdAt DateTime @default(now())
-
-  @@unique([techId, tagId])
-}
-
-model ProjectTag {
-  id        String   @id @default(cuid())
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  projectId String
-  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  tagId     String
-  createdAt DateTime @default(now())
-
-  @@unique([projectId, tagId])
-}
-
 model Inbox {
-  id          String   @id @default(cuid())
-  type        String   // email, phone, etc.
-  value       String   // 具体的联系方式值
-  description String?  // 描述或留言
+  id          String   @id
+  type        String
+  value       String
+  description String?
   isRead      Boolean  @default(false)
   createdAt   DateTime @default(now())
 }
 
-model ResumeSection {
-  id          String   @id @default(cuid())
+model Link {
+  id          String          @id
+  type        String
+  content     String
+  description String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime
   language    ContentLanguage @default(zh)
-  name        String   // 部分名称，如 "projects", "techs", "about"
-  label       String   // 显示名称，如 "项目经历", "技术栈", "关于我"
-  description String?  // 描述
-  type        String   // 部分类型：basic(基本信息), list(列表), grid(网格), custom(自定义)
-  component   String   // 对应的组件名称
-  isEnabled   Boolean  @default(true)  // 是否启用该部分
-  isPublished Boolean  @default(false)  // 是否公开显示
-  order       Int      @default(0)      // 显示顺序
-  config      String?  // JSON 格式的额外配置
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+}
+
+model Location {
+  id          String          @id
+  latitude    Float
+  longitude   Float
+  address     String
+  description String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime
+  language    ContentLanguage @default(zh)
+}
+
+model Page {
+  id          String          @id
+  slug        String
+  title       String
+  content     String
+  path        String
+  isPublished Boolean         @default(false)
+  metadata    String?
+  order       Int             @default(0)
+  parentId    String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime
+  language    ContentLanguage @default(zh)
+
+  @@unique([slug, language])
+}
+
+model Project {
+  id           String          @id
+  name         String
+  jobRole      String?
+  jobTech      String?
+  startTime    DateTime?
+  endTime      DateTime?
+  description  String
+  detail       String?
+  order        Int             @default(0)
+  isPublished  Boolean         @default(false)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime
+  language     ContentLanguage @default(zh)
+  ProjectImage ProjectImage[]
+  ProjectLink  ProjectLink[]
+  ProjectTag   ProjectTag[]
+}
+
+model ProjectImage {
+  id        String          @id
+  path      String
+  alt       String?
+  projectId String
+  createdAt DateTime        @default(now())
+  updatedAt DateTime
+  language  ContentLanguage @default(zh)
+  Project   Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model ProjectLink {
+  id        String          @id
+  label     String
+  url       String
+  order     Int             @default(0)
+  projectId String
+  createdAt DateTime        @default(now())
+  updatedAt DateTime
+  language  ContentLanguage @default(zh)
+  Project   Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model ProjectTag {
+  id        String   @id
+  projectId String
+  tagId     String
+  createdAt DateTime @default(now())
+  Project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  Tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, tagId])
+}
+
+model Resume {
+  id           String          @id
+  name         String
+  description  String
+  startTime    DateTime
+  endTime      DateTime?
+  location     String?
+  title        String?
+  organization String?
+  highlights   String?
+  order        Int             @default(0)
+  isPublished  Boolean         @default(false)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime
+  language     ContentLanguage @default(zh)
+  ResumeTag    ResumeTag[]
+}
+
+model ResumeSection {
+  id          String          @id
+  name        String
+  label       String
+  description String?
+  type        String
+  component   String
+  isEnabled   Boolean         @default(true)
+  isPublished Boolean         @default(false)
+  order       Int             @default(0)
+  config      String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime
+  language    ContentLanguage @default(zh)
 
   @@unique([name, language])
 }
 
-model Resume {
-  id          String   @id @default(cuid())
-  language    ContentLanguage @default(zh)
-  name        String   // 履历名称，如"工作经历"、"教育经历"
-  description String   // 详细描述
-  startTime   DateTime // 开始时间
-  endTime     DateTime? // 结束时间，可为空表示至今
-  location    String?  // 地点，如公司地点、学校地点
-  title       String?  // 职位或学位
-  organization String? // 组织名称，如公司名、学校名
-  highlights  String?  // JSON格式存储的重点成就或详细信息
-  order       Int      @default(0) // 显示顺序
-  isPublished Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  tags        ResumeTag[]
-}
-
 model ResumeTag {
-  id        String   @id @default(cuid())
-  resume    Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  id        String   @id
   resumeId  String
-  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
   tagId     String
   createdAt DateTime @default(now())
+  Resume    Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  Tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@unique([resumeId, tagId])
 }
 
-model CallMe {
-  id          String   @id @default(cuid())
+model Settings {
+  id           String          @id
+  websiteTitle String?
+  favicon      String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime
+  language     ContentLanguage @default(zh)
+}
+
+model Tag {
+  id          String          @id
+  name        String
+  description String?
+  color       String
+  order       Int             @default(0)
+  isPublished Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime
   language    ContentLanguage @default(zh)
-  label       String   // 展示名称，如 "邮箱"、"GitHub"
-  type        String   // text | link
-  iconName    String   // lucide-react icon name, e.g. "Mail"
-  value       String   // 文本内容；link 类型可用于展示文本
-  href        String?  // link 类型的跳转地址
-  order       Int      @default(0)
-  isPublished Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  FileTag     FileTag[]
+  ProjectTag  ProjectTag[]
+  ResumeTag   ResumeTag[]
+  TechTag     TechTag[]
+
+  @@unique([name, language])
+}
+
+model Tech {
+  id          String          @id
+  name        String
+  description String
+  icon        String?
+  link        String?
+  bgColor     String
+  order       Int             @default(0)
+  isPublished Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime
+  language    ContentLanguage @default(zh)
+  TechTag     TechTag[]
+
+  @@unique([name, language])
+}
+
+model TechTag {
+  id        String   @id
+  techId    String
+  tagId     String
+  createdAt DateTime @default(now())
+  Tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  Tech      Tech     @relation(fields: [techId], references: [id], onDelete: Cascade)
+
+  @@unique([techId, tagId])
+}
+
+enum ContentLanguage {
+  zh
+  en
 }
