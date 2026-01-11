@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { uploadToS3 } from "@/lib/utils";
+import { uploadToS3 } from "@/lib/utils/s3";
 
 export async function POST(request: Request) {
   try {

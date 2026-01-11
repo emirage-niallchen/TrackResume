@@ -1,44 +1,29 @@
+"use client";
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Copy, Check, Mail, Phone, Github, MessageSquare } from "lucide-react";
+import { Copy, Check } from "lucide-react";
 import { toast } from "sonner";
+import useSWR from "swr";
+import { fetcher, getCallMeIcon } from "@/lib/utils";
 
-interface ContactItem {
-  icon: React.ReactNode;
+interface CallMeItem {
+  id: string;
   label: string;
+  type: "text" | "link";
+  iconName: string;
   value: string;
+  href?: string | null;
 }
-
-const contactItems: ContactItem[] = [
-  {
-    icon: <Mail className="h-4 w-4" />,
-    label: "邮箱",
-    value: "admin@artithm.com"
-  },
-  {
-    icon: <Phone className="h-4 w-4" />,
-    label: "电话",
-    value: "+86 1563063XXXX"
-  },
-  {
-    icon: <Github className="h-4 w-4" />,
-    label: "GitHub",
-    value: "https://github.com/emirage-niallchen"
-  },
-  {
-    icon: <MessageSquare className="h-4 w-4" />,
-    label: "微信",
-    value: "XXXX_XX_XXX"
-  }
-];
 
 export function ContactInfo() {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const { data: callMeItems, isLoading } = useSWR<CallMeItem[]>("/api/call-me", fetcher);
 
-  const handleCopy = async (value: string, index: number) => {
+  const handleCopy = async (text: string, index: number) => {
     try {
-      await navigator.clipboard.writeText(value);
+      await navigator.clipboard.writeText(text);
       setCopiedIndex(index);
       toast.success("复制成功！");
       setTimeout(() => setCopiedIndex(null), 2000);
@@ -47,29 +32,56 @@ export function ContactInfo() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <Card className="mt-4">
+        <CardContent className="p-4">
+          <div className="text-sm text-muted-foreground">加载中...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const items = callMeItems || [];
+
   return (
     <Card className="mt-4">
       <CardContent className="p-4">
         <div className="grid gap-4">
-          {contactItems.map((item, index) => (
+          {items.map((item, index) => {
+            const Icon = getCallMeIcon(item.iconName);
+            const copyText = item.type === "link" ? (item.href || item.value) : item.value;
+            return (
             <div
-              key={item.label}
+              key={item.id}
               className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50"
             >
               <div 
                 className="flex items-center gap-2 cursor-pointer flex-1"
-                onClick={() => handleCopy(item.value, index)}
+                onClick={() => handleCopy(copyText, index)}
               >
-                {item.icon}
+                <Icon className="h-4 w-4" />
                 <span className="font-medium">{item.label}:</span>
-                <span className={`text-muted-foreground transition-colors ${copiedIndex === index ? 'text-green-500' : ''}`}>
-                  {item.value}
-                </span>
+                {item.type === "link" && item.href ? (
+                  <a
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`text-muted-foreground transition-colors underline break-all ${copiedIndex === index ? "text-green-500" : ""}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {item.value}
+                  </a>
+                ) : (
+                  <span className={`text-muted-foreground transition-colors ${copiedIndex === index ? 'text-green-500' : ''}`}>
+                    {item.value}
+                  </span>
+                )}
               </div>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => handleCopy(item.value, index)}
+                onClick={() => handleCopy(copyText, index)}
                 className="ml-2"
               >
                 {copiedIndex === index ? (
@@ -79,7 +91,10 @@ export function ContactInfo() {
                 )}
               </Button>
             </div>
-          ))}
+          )})}
+          {items.length === 0 && (
+            <div className="text-sm text-muted-foreground">暂无联系方式</div>
+          )}
         </div>
       </CardContent>
     </Card>

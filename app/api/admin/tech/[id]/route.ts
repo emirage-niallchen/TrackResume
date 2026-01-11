@@ -3,6 +3,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkAuth } from "@/lib/auth";
+import { deleteFromS3 } from "@/lib/utils/s3";
 
 
 export async function PATCH(
@@ -21,7 +22,7 @@ export async function PATCH(
     const data = await request.json();
     const { name, description, bgColor, isPublished, tags, icon } = data;
 
-    // 确保 params.id 存在
+    // Ensure params.id exists.
     const id = params.id;
     if (!id) {
       return new Response(JSON.stringify({ error: "缺少ID" }), {
@@ -29,7 +30,25 @@ export async function PATCH(
       });
     }
 
-    // 构建更新数据对象
+    // Get existing tech to check for old icon
+    const existingTech = await prisma.tech.findUnique({
+      where: { id },
+    });
+    
+    // If icon is being updated and old icon exists, delete it from S3
+    if (icon !== undefined && icon !== null && existingTech?.icon) {
+      // Only delete if old icon is an S3 URL (not base64)
+      if (existingTech.icon.startsWith('http://') || existingTech.icon.startsWith('https://')) {
+        try {
+          await deleteFromS3(existingTech.icon);
+        } catch (error) {
+          console.error('Failed to delete old tech icon:', error);
+          // Continue with update, don't fail if delete fails
+        }
+      }
+    }
+
+    // Build update data object
     const updateData: any = {
       ...(name && { name }),
       ...(description && { description }),
@@ -95,7 +114,7 @@ export async function DELETE(
     }
 
 
-    const tech= await prisma.tech.findUnique({
+    const tech = await prisma.tech.findUnique({
       where: { id }
     });
 
@@ -105,7 +124,17 @@ export async function DELETE(
       });
     }
 
-    // 删除数据库记录
+    // Delete icon from S3 if it exists and is an S3 URL
+    if (tech.icon && (tech.icon.startsWith('http://') || tech.icon.startsWith('https://'))) {
+      try {
+        await deleteFromS3(tech.icon);
+      } catch (error) {
+        console.error('Failed to delete tech icon from S3:', error);
+        // Continue with deletion, don't fail if S3 delete fails
+      }
+    }
+
+    // Delete database record
     await prisma.tech.delete({
       where: { id },
     });

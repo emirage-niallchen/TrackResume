@@ -2,7 +2,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkAuth } from "@/lib/auth";
-import { deleteFromS3 } from "@/lib/utils";
+import { deleteFromS3 } from "@/lib/utils/s3";
 
 export async function PATCH(
   request: NextRequest,

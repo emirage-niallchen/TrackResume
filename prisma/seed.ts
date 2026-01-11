@@ -6,6 +6,7 @@ const prisma = new PrismaClient();
 async function main() {
   // 清理现有数据
   await prisma.inbox.deleteMany();
+  await prisma.callMe.deleteMany();
   await prisma.project.deleteMany();
   await prisma.tech.deleteMany();
   await prisma.file.deleteMany();
@@ -90,7 +91,29 @@ async function main() {
     ]
   });
 
-  console.log('数据库初始化完成');
+  await prisma.callMe.createMany({
+    data: [
+      {
+        label: '邮箱',
+        type: 'text',
+        iconName: 'Mail',
+        value: 'admin@example.com',
+        order: 0,
+        isPublished: false
+      },
+      {
+        label: 'GitHub',
+        type: 'link',
+        iconName: 'Github',
+        value: 'github.com/example',
+        href: 'https://github.com/example',
+        order: 1,
+        isPublished: false
+      }
+    ]
+  });
+
+  console.log('Seed completed');
 }
 
 main()

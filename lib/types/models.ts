@@ -24,6 +24,19 @@ export interface CustomField {
   updatedAt: Date;
 }
 
+export interface CallMe {
+  id: string;
+  label: string;
+  type: string;
+  iconName: string;
+  value: string;
+  href?: string | null;
+  order: number;
+  isPublished: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface File {
   id: string;
   name: string;

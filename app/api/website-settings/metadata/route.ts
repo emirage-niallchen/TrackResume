@@ -16,10 +16,8 @@ export async function GET() {
       });
     }
     
-    // 构造favicon的完整URL
-    const faviconUrl = settings.favicon 
-      ? `data:image/jpeg;base64,${settings.favicon}`
-      : '/favicon.svg';
+    // Return favicon URL (already S3 URL, or default)
+    const faviconUrl = settings.favicon || '/favicon.svg';
     
     console.log('Metadata fetched successfully', { 
       hasTitle: !!settings.websiteTitle,

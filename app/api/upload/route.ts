@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { checkAuth } from '@/lib/auth';
-import { uploadToS3 } from '@/lib/utils';
+import { uploadToS3 } from '@/lib/utils/s3';
 
 export async function POST(request: Request) {
   try {

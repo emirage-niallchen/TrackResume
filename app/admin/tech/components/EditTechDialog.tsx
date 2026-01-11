@@ -102,42 +102,44 @@ export function EditTechDialog({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // 检查文件类型
+    // Check file type
     const validTypes = ['image/jpeg', 'image/png', 'image/svg+xml'];
     if (!validTypes.includes(file.type)) {
       toast.error('请上传 JPG、PNG 或 SVG 格式的图片');
       return;
     }
 
-    // 检查文件大小（例如限制为 2MB）
+    // Check file size (limit to 10MB)
     if (file.size > 10 * 1024 * 1024) {
-      toast.error('图片大小不能超过 2MB');
+      toast.error('图片大小不能超过 10MB');
       return;
     }
 
     try {
-      if (file.type === 'image/svg+xml') {
-        // 对于 SVG 文件，直接读取文本内容
-        const text = await file.text();
-        setFormData(prev => ({
-          ...prev,
-          icon: text
-        }));
-      } else {
-        // 对于其他图片格式，转换为 base64
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const base64String = event.target?.result as string;
-          setFormData(prev => ({
-            ...prev,
-            icon: base64String
-          }));
-        };
-        reader.readAsDataURL(file);
+      // Upload to S3
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch('/api/admin/tech/icon', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '上传失败');
       }
-    } catch (error) {
-      console.error('图片处理失败:', error);
-      toast.error('图片处理失败，请重试');
+
+      const result = await response.json();
+      setFormData(prev => ({
+        ...prev,
+        icon: result.iconUrl
+      }));
+      
+      toast.success('图标上传成功');
+    } catch (error: any) {
+      console.error('Icon upload failed:', error);
+      toast.error(error.message || '图片上传失败，请重试');
     }
   };
 
@@ -204,7 +206,7 @@ export function EditTechDialog({
                   <img
                     src={formData.icon}
                     alt="Tech icon"
-                    className="object-contain"
+                    className="object-contain w-full h-full"
                   />
                   <Button
                     type="button"

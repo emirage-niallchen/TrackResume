@@ -102,18 +102,18 @@ export default function WebsiteSettings() {
     }
   };
 
-  // 处理图标上传
+  // Handle favicon upload
   const handleFaviconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // 验证文件类型
+    // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error('请选择图片文件');
       return;
     }
 
-    // 验证文件大小 (限制为1MB)
+    // Validate file size (limit to 1MB)
     if (file.size > 1024 * 1024) {
       toast.error('图标文件大小不能超过1MB');
       return;
@@ -121,11 +121,25 @@ export default function WebsiteSettings() {
 
     try {
       setSaving(true);
-      console.log('Uploading favicon');
+      console.log('Uploading favicon to S3');
       
-      const base64 = await convertToBase64(file);
-      const base64Data = base64.split(',')[1];
+      // Upload file to S3
+      const formData = new FormData();
+      formData.append('file', file);
       
+      const uploadResponse = await fetch('/api/admin/favicon', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload favicon');
+      }
+
+      const uploadResult = await uploadResponse.json();
+      const faviconUrl = uploadResult.favicon;
+      
+      // Update settings with new favicon URL
       const response = await fetch('/api/website-settings', {
         method: 'PUT',
         headers: {
@@ -133,19 +147,19 @@ export default function WebsiteSettings() {
         },
         body: JSON.stringify({
           websiteTitle: websiteTitle.trim(),
-          favicon: base64Data,
+          favicon: faviconUrl,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to upload favicon');
+        throw new Error('Failed to update settings');
       }
 
       const updatedSettings = await response.json();
       setSettings(updatedSettings);
-      setFaviconPreview(base64);
+      setFaviconPreview(faviconUrl);
       
-      // 刷新缓存
+      // Refresh cache
       try {
         await fetch('/api/website-settings/refresh', { method: 'POST' });
         console.log('Cache refreshed after favicon upload');
@@ -163,26 +177,22 @@ export default function WebsiteSettings() {
     }
   };
 
-  // 转换文件为Base64
-  const convertToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
-    });
-  };
-
-  // 获取图片URL
-  const getImageUrl = (base64String: string | null | undefined) => {
-    if (!base64String) return null;
-    if (base64String.startsWith('data:image/')) {
-      return base64String;
+  // Get image URL (handles both S3 URLs and base64 for backward compatibility)
+  const getImageUrl = (url: string | null | undefined) => {
+    if (!url) return null;
+    // If it's already a full URL (S3), return as is
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
     }
-    return `data:image/jpeg;base64,${base64String}`;
+    // If it's base64 (legacy), return as is
+    if (url.startsWith('data:image/')) {
+      return url;
+    }
+    // Legacy base64 without prefix
+    return `data:image/jpeg;base64,${url}`;
   };
 
-  // 移除图标
+  // Remove favicon
   const removeFavicon = async () => {
     try {
       setSaving(true);
@@ -207,7 +217,7 @@ export default function WebsiteSettings() {
       setSettings(updatedSettings);
       setFaviconPreview(null);
       
-      // 刷新缓存
+      // Refresh cache
       try {
         await fetch('/api/website-settings/refresh', { method: 'POST' });
         console.log('Cache refreshed after favicon removal');

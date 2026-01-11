@@ -1,6 +1,6 @@
 
 import { NextRequest, NextResponse } from "next/server";
-import { uploadToS3, deleteFromS3 } from "@/lib/utils";
+import { uploadToS3, deleteFromS3 } from "@/lib/utils/s3";
 import { extname } from "path";
 import { prisma } from "@/lib/prisma";
 

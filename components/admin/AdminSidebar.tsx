@@ -31,6 +31,11 @@ const navItems = [
     href: "/admin/resumes",
     icon: "resumes"
   },
+  {
+    title: "联系方式",
+    href: "/admin/call-me",
+    icon: "call-me"
+  },
   // {
   //   title: "位置信息",
   //   href: "/admin/location",

@@ -22,7 +22,7 @@ model Admin {
   email     String?   @unique
   password  String
   description String   // 自定义描述文本
-  avatar    String?  @db.Text  // base64 格式的头像数据
+  avatar    String?  @db.Text  // 头像URL (S3存储)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   background String?  @db.Text  // 背景图片
@@ -32,7 +32,7 @@ model Admin {
 model Settings {
   id        String   @id @default(cuid())
   websiteTitle String?  // 网站标题
-  favicon String?  @db.Text  // favicon base64 数据
+  favicon String?  @db.Text  // favicon URL (S3存储)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -74,7 +74,7 @@ model Tech {
   id          String       @id @default(cuid())
   name        String       @unique
   description String
-  icon        String?      //直接上传图片进行编码
+  icon        String?      // 图标URL (S3存储)
   link        String?
   bgColor     String
   order       Int         @default(0)
@@ -235,4 +235,17 @@ model ResumeTag {
   createdAt DateTime @default(now())
 
   @@unique([resumeId, tagId])
-} 
+}
+
+model CallMe {
+  id          String   @id @default(cuid())
+  label       String   // 展示名称，如 "邮箱"、"GitHub"
+  type        String   // text | link
+  iconName    String   // lucide-react icon name, e.g. "Mail"
+  value       String   // 文本内容；link 类型可用于展示文本
+  href        String?  // link 类型的跳转地址
+  order       Int      @default(0)
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

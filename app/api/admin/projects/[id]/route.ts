@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { date, z } from "zod";
-import { uploadToS3, deleteFromS3 } from "@/lib/utils";
+import { uploadToS3, deleteFromS3 } from "@/lib/utils/s3";
 
 // 校验编辑参数
 const updateProjectSchema = z.object({

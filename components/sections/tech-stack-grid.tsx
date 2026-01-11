@@ -48,7 +48,7 @@ export function TechStackGrid({ techs }: { techs: TechVO[] }) {
             >
               <CardHeader className="flex flex-col items-center gap-2 min-h-[120px] justify-center">
                 {tech.icon ? (
-                  tech.icon.startsWith('data:image') ? (
+                  tech.icon.startsWith('data:image') || tech.icon.startsWith('http://') || tech.icon.startsWith('https://') ? (
                     <div className="relative w-16 h-16 mb-2">
                       <img
                         src={tech.icon}

@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { uploadToS3, deleteFromS3 } from "@/lib/utils";
+import { uploadToS3, deleteFromS3 } from "@/lib/utils/s3";
 
 /**
  * 处理项目创建请求
