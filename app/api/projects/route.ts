@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import type { Project, Tag, ProjectImage, ProjectLink} from "@prisma/client";
+import { getContentLanguageFromRequest } from "@/lib/validations/contentLanguage";
 
 // 强制动态渲染，避免静态生成
 export const dynamic = 'force-dynamic';
@@ -17,28 +18,32 @@ export type ProjectVO = Project & {
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
+    const language = getContentLanguageFromRequest(request);
 
     const tags = searchParams.getAll('tags'); // 获取所有tags参数
     
     const projects = await prisma.project.findMany({
       where: {
         isPublished: true,
+        language,
         ...(tags.length > 0 && {
           tags: {
             some: {
               tag: {
                 name: {
                   in: tags
-                }
+                },
+                language,
               }
             }
           }
         }),
       },
       include: {
-        images: true,
-        links: true,
+        images: { where: { language } },
+        links: { where: { language } },
         tags: {
+          where: { tag: { language } },
           include: {
             tag: true
           }

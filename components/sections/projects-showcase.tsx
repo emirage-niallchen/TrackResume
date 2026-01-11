@@ -6,19 +6,21 @@ import { ExternalLink, FileText, ArrowUpRight } from "lucide-react";
 import { format } from "date-fns";
 import Image from "next/image";
 import { ProjectVO } from "@/app/api/projects/route";
+import { useTranslation } from "react-i18next";
 
 export function ProjectsShowcase({ projects }: { projects: ProjectVO[] }) {
+  const { t, i18n } = useTranslation();
   const handleViewDetail = (projectId: string) => {
     window.open(`/projects/${projectId}/detail`, '_blank');
   };
 
-  if (!projects || projects.length === 0) {
+  if (!Array.isArray(projects) || projects.length === 0) {
     return (
       <section className="py-16" id="projects">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-8">项目展示</h2>
+          <h2 className="text-3xl font-bold mb-8">{t('home.section.projects')}</h2>
           <div className="text-center text-muted-foreground py-8">
-            暂无项目展示
+            {t('home.empty.projects')}
           </div>
         </div>
       </section>
@@ -28,7 +30,7 @@ export function ProjectsShowcase({ projects }: { projects: ProjectVO[] }) {
   return (
     <section className="py-16" id="projects">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold mb-8">项目展示</h2>
+        <h2 className="text-3xl font-bold mb-8">{t('home.section.projects')}</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
           {projects.map((project) => (
@@ -41,14 +43,29 @@ export function ProjectsShowcase({ projects }: { projects: ProjectVO[] }) {
                   onClick={() => handleViewDetail(project.id)}
                 >
                   <FileText className="h-4 w-4" />
-                  <span>详情</span>
+                  <span>{t('home.label.detail')}</span>
                 </Button>
                 <CardTitle className="text-2xl">{project.name}</CardTitle>
-                {project.jobRole && <div className="text-lg font-medium">{`项目职责：` + project.jobRole}</div>}
+                {project.jobRole && (
+                  <div className="text-lg font-medium">
+                    {t('home.label.projectRole')}
+                    {project.jobRole}
+                  </div>
+                )}
                 {(project.startTime || project.endTime) && (
-                  <div className="text-sm text-muted-foreground">项目周期：
-                    {project.startTime && format(new Date(project.startTime), 'yyyy-MM')}
-                    {project.endTime ? ` 至 ${format(new Date(project.endTime), 'yyyy-MM')}` : ' 至今'}
+                  <div className="text-sm text-muted-foreground">
+                    {t('home.label.projectDuration')}
+                    {project.startTime &&
+                      format(
+                        new Date(project.startTime),
+                        i18n.resolvedLanguage === 'en' ? 'MMM yyyy' : 'yyyy-MM'
+                      )}
+                    {project.endTime
+                      ? ` ${t('home.label.to')} ${format(
+                          new Date(project.endTime),
+                          i18n.resolvedLanguage === 'en' ? 'MMM yyyy' : 'yyyy-MM'
+                        )}`
+                      : ` ${t('home.label.present')}`}
                   </div>
                 )}
               </CardHeader>
@@ -84,7 +101,7 @@ export function ProjectsShowcase({ projects }: { projects: ProjectVO[] }) {
 
                 {project.jobTech && (
                   <div className="mt-4">
-                    <h4 className="font-medium mb-2">技术选用:</h4>
+                    <h4 className="font-medium mb-2">{t('home.label.techSelection')}</h4>
                     <p className="line-clamp-2">{project.jobTech}</p>
                   </div>
                 )}

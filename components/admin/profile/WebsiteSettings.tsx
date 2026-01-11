@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { Upload, Save, RefreshCw } from 'lucide-react';
+import { useAdminContentLanguage } from '@/lib/context/AdminContentLanguageProvider';
 
 interface WebsiteSettings {
   id: string;
@@ -23,6 +24,7 @@ export default function WebsiteSettings() {
   const [saving, setSaving] = useState(false);
   const [websiteTitle, setWebsiteTitle] = useState('');
   const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
+  const { withLanguage } = useAdminContentLanguage();
 
   // 获取网站设置
   const fetchSettings = async () => {
@@ -30,7 +32,7 @@ export default function WebsiteSettings() {
       setLoading(true);
       console.log('Fetching website settings from API');
       
-      const response = await fetch('/api/website-settings', {
+      const response = await fetch(withLanguage('/api/website-settings'), {
         cache: 'no-store',
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -66,7 +68,7 @@ export default function WebsiteSettings() {
       setSaving(true);
       console.log('Saving website settings');
       
-      const response = await fetch('/api/website-settings', {
+      const response = await fetch(withLanguage('/api/website-settings'), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -86,7 +88,7 @@ export default function WebsiteSettings() {
       
       // 刷新缓存
       try {
-        await fetch('/api/website-settings/refresh', { method: 'POST' });
+        await fetch(withLanguage('/api/website-settings/refresh'), { method: 'POST' });
         console.log('Cache refreshed after settings update');
       } catch (cacheError) {
         console.warn('Failed to refresh cache:', cacheError);
@@ -127,7 +129,7 @@ export default function WebsiteSettings() {
       const formData = new FormData();
       formData.append('file', file);
       
-      const uploadResponse = await fetch('/api/admin/favicon', {
+      const uploadResponse = await fetch(withLanguage('/api/admin/favicon'), {
         method: 'POST',
         body: formData,
       });
@@ -140,7 +142,7 @@ export default function WebsiteSettings() {
       const faviconUrl = uploadResult.favicon;
       
       // Update settings with new favicon URL
-      const response = await fetch('/api/website-settings', {
+      const response = await fetch(withLanguage('/api/website-settings'), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -161,7 +163,7 @@ export default function WebsiteSettings() {
       
       // Refresh cache
       try {
-        await fetch('/api/website-settings/refresh', { method: 'POST' });
+        await fetch(withLanguage('/api/website-settings/refresh'), { method: 'POST' });
         console.log('Cache refreshed after favicon upload');
       } catch (cacheError) {
         console.warn('Failed to refresh cache:', cacheError);
@@ -198,7 +200,7 @@ export default function WebsiteSettings() {
       setSaving(true);
       console.log('Removing favicon');
       
-      const response = await fetch('/api/website-settings', {
+      const response = await fetch(withLanguage('/api/website-settings'), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -219,7 +221,7 @@ export default function WebsiteSettings() {
       
       // Refresh cache
       try {
-        await fetch('/api/website-settings/refresh', { method: 'POST' });
+        await fetch(withLanguage('/api/website-settings/refresh'), { method: 'POST' });
         console.log('Cache refreshed after favicon removal');
       } catch (cacheError) {
         console.warn('Failed to refresh cache:', cacheError);

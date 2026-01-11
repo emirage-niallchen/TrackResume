@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toContentLanguage, withContentLanguageParam } from '@/lib/utils';
 
 interface WebsiteMetadata {
   websiteTitle: string;
@@ -8,12 +10,16 @@ interface WebsiteMetadata {
 }
 
 export default function DynamicMetadata() {
+  const { i18n } = useTranslation();
+  const language = toContentLanguage(i18n.resolvedLanguage);
+
   useEffect(() => {
     const updatePageMetadata = async () => {
       try {
         console.log('Updating page metadata on client side');
         
-        const response = await fetch('/api/website-settings/metadata', {
+        const url = withContentLanguageParam('/api/website-settings/metadata', language);
+        const response = await fetch(url, {
           cache: 'no-store',
           headers: {
             'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -73,7 +79,7 @@ export default function DynamicMetadata() {
       clearTimeout(timer);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [language]);
 
   // 这个组件不渲染任何内容
   return null;

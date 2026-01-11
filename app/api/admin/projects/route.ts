@@ -2,12 +2,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { uploadToS3, deleteFromS3 } from "@/lib/utils/s3";
+import { getContentLanguageFromRequest } from "@/lib/validations/contentLanguage";
 
 /**
  * 处理项目创建请求
  */
 export async function POST(req: NextRequest) {
   try {
+    const language = getContentLanguageFromRequest(req);
     const formData = await req.formData();
     const name = formData.get("name") as string;
     const jobRole = formData.get("jobRole") as string;
@@ -23,6 +25,7 @@ export async function POST(req: NextRequest) {
     // 创建项目
     const project = await prisma.project.create({
       data: {
+        language,
         name,
         jobRole,
         jobTech,
@@ -39,6 +42,7 @@ export async function POST(req: NextRequest) {
         },
         links: {
           create: links.map((link: { label: string; url: string }) => ({
+            language,
             label: link.label,
             url: link.url
           }))
@@ -55,6 +59,7 @@ export async function POST(req: NextRequest) {
 
         await prisma.projectImage.create({
           data: {
+            language,
             path: fileUrl,
             project: {
               connect: { id: project.id }
@@ -76,6 +81,7 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
+    const language = getContentLanguageFromRequest(req);
     const formData = await req.formData();
     const id = formData.get("id") as string;
     const name = formData.get("name") as string;
@@ -112,6 +118,7 @@ export async function PUT(req: NextRequest) {
         links: {
           deleteMany: {},
           create: links.map((link: { label: string; url: string }) => ({
+            language,
             label: link.label,
             url: link.url
           }))
@@ -158,6 +165,7 @@ export async function PUT(req: NextRequest) {
 
         await prisma.projectImage.create({
           data: {
+            language,
             path: fileUrl,
             project: {
               connect: { id: project.id }
@@ -177,9 +185,11 @@ export async function PUT(req: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const language = getContentLanguageFromRequest(req);
     const projects = await prisma.project.findMany({
+      where: { language },
       include: {
         images: true,
         links: true,

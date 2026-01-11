@@ -3,16 +3,18 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Resume } from "@prisma/client";
 import { ResumeVO } from "@/app/api/resume/route";
+import { useTranslation } from "react-i18next";
 
 export function ResumeTimeline({ resumes }:{resumes:ResumeVO[]}) {
+  const { t, i18n } = useTranslation();
   // 添加空值检查
-  if (!resumes || resumes.length === 0) {
+  if (!Array.isArray(resumes) || resumes.length === 0) {
     return (
       <section className="py-16" id="experience">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-8">工作与教育经历</h2>
+          <h2 className="text-3xl font-bold mb-8">{t('home.section.experience')}</h2>
           <div className="text-center text-muted-foreground py-8">
-            暂无工作与教育经历
+            {t('home.empty.experience')}
           </div>
         </div>
       </section>
@@ -27,7 +29,7 @@ export function ResumeTimeline({ resumes }:{resumes:ResumeVO[]}) {
   return (
     <section className="py-16" id="experience">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold mb-8">工作与教育经历</h2>
+        <h2 className="text-3xl font-bold mb-8">{t('home.section.experience')}</h2>
         
         <div className="relative border-l-2 border-primary/50 pl-8 ml-4 space-y-10">
           {sortedResumes.map((resume) => (
@@ -59,8 +61,17 @@ export function ResumeTimeline({ resumes }:{resumes:ResumeVO[]}) {
                       <span>{resume.location}</span>
                     )}
                     <span>
-                      {format(new Date(resume.startTime), 'yyyy-MM')} 至 
-                      {resume.endTime ? format(new Date(resume.endTime), ' yyyy-MM') : ' 至今'}
+                      {format(
+                        new Date(resume.startTime),
+                        i18n.resolvedLanguage === 'en' ? 'MMM yyyy' : 'yyyy-MM'
+                      )}{' '}
+                      {t('home.label.to')}{' '}
+                      {resume.endTime
+                        ? format(
+                            new Date(resume.endTime),
+                            i18n.resolvedLanguage === 'en' ? 'MMM yyyy' : 'yyyy-MM'
+                          )
+                        : t('home.label.present')}
                     </span>
                   </div>
                 </CardHeader>
@@ -70,7 +81,7 @@ export function ResumeTimeline({ resumes }:{resumes:ResumeVO[]}) {
                   
                   {resume.highlights && (
                     <div className="mt-4">
-                      <h4 className="font-medium mb-2">主要成就:</h4>
+                      <h4 className="font-medium mb-2">{t('home.label.highlights')}</h4>
                       <ul className="list-disc pl-5 space-y-1">
                         {(JSON.parse(resume.highlights) as string[]).map((highlight, index) => (
                           <li key={index}>{highlight}</li>

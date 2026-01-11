@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkAuth } from "@/lib/auth";
 import { deleteFromS3 } from "@/lib/utils/s3";
+import { getContentLanguageFromRequest } from "@/lib/validations/contentLanguage";
 
 
 export async function PATCH(
@@ -31,9 +32,13 @@ export async function PATCH(
     }
 
     // Get existing tech to check for old icon
-    const existingTech = await prisma.tech.findUnique({
-      where: { id },
+    const language = getContentLanguageFromRequest(request);
+    const existingTech = await prisma.tech.findFirst({
+      where: { id, language },
     });
+    if (!existingTech) {
+      return new Response(JSON.stringify({ error: "技术栈不存在" }), { status: 404 });
+    }
     
     // If icon is being updated and old icon exists, delete it from S3
     if (icon !== undefined && icon !== null && existingTech?.icon) {
@@ -113,9 +118,9 @@ export async function DELETE(
       });
     }
 
-
-    const tech = await prisma.tech.findUnique({
-      where: { id }
+    const language = getContentLanguageFromRequest(request);
+    const tech = await prisma.tech.findFirst({
+      where: { id, language }
     });
 
     if (!tech) {

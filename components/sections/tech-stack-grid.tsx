@@ -3,8 +3,10 @@ import { Badge } from "@/components/ui/badge";
 import { TechVO } from "@/app/api/techs/route";
 import { useEffect } from "react";
 import Image from "next/image";
+import { useTranslation } from "react-i18next";
 
 export function TechStackGrid({ techs }: { techs: TechVO[] }) {
+  const { t } = useTranslation();
   console.log('TechStackGrid received techs:', techs);
   
   // 添加自定义样式到页面
@@ -37,7 +39,7 @@ export function TechStackGrid({ techs }: { techs: TechVO[] }) {
   return (
     <section className="py-16" id="tech-stack">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold mb-8">技术栈</h2>
+        <h2 className="text-3xl font-bold mb-8">{t('home.section.techStack')}</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {techs.map((tech) => (

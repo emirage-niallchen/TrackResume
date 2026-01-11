@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { CallMeForm, type CallMeFormValues } from "@/components/CallMe/CallMeForm";
+import { useAdminContentLanguage } from "@/lib/context/AdminContentLanguageProvider";
 
 export interface CallMeItem {
   id: string;
@@ -25,14 +26,15 @@ interface EditCallMeDialogProps {
 
 export function EditCallMeDialog({ open, onOpenChange, item, onSuccess }: EditCallMeDialogProps) {
   const [submitting, setSubmitting] = useState(false);
+  const { language, withLanguage } = useAdminContentLanguage();
 
   const handleSubmit = async (values: CallMeFormValues) => {
     try {
       setSubmitting(true);
-      const res = await fetch(`/api/admin/call-me/${item.id}`, {
+      const res = await fetch(withLanguage(`/api/admin/call-me/${item.id}`), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify({ ...values, language }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));

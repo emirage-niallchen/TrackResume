@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getContentLanguageFromRequest } from "@/lib/validations/contentLanguage";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { name, description, bgColor, tags, icon } = body;
+    const language = getContentLanguageFromRequest(request);
 
     // 获取当前最大的 order 值
     const maxOrderTech = await prisma.tech.findFirst({
+      where: { language },
       orderBy: {
         order: 'desc'
       }
@@ -19,6 +22,7 @@ export async function POST(request: Request) {
     // 创建技术栈记录
     const tech = await prisma.tech.create({
       data: {
+        language,
         name,
         description,
         bgColor,
@@ -67,9 +71,11 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const searchName = searchParams.get('name') || '';
+    const language = getContentLanguageFromRequest(request);
 
     const techs = await prisma.tech.findMany({
       where: {
+        language,
         name: {
           contains: searchName,
         }

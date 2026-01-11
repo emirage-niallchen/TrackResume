@@ -24,7 +24,7 @@
 - 使用 tRPC 进行API请求,目的是类型提示与类型安全
 - 使用 t3-env 进行环境变量管理 
 - 使用 authjs 进行用户管理
-- 使用 React-i18next  进行国际化
+- 使用 React-i18next  以及i18next进行国际化
 # 文件结构
 - 目录结构遵循Next13+的App Router 结构，采用最佳实践和项目组织规范,包括app、components、lib、public以及配置文件,存放在根目录下,hooks、types、utils、prisma.ts以及其他工具文件存放在lib目录下
 - components: 可复用的 UI 组件

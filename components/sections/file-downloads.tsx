@@ -1,20 +1,21 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { File } from "@prisma/client";
-import { FileVO } from "@/app/api/files/route";
+import type { FileVO } from "@/lib/types";
 import { getFileIcon, isVideoFile } from "@/lib/utils";
 import { useState } from "react";
 import { VideoPlayerDialog } from "@/components/ui/video-player-dialog";
+import { useTranslation } from "react-i18next";
 
 
 // FIXME 需要确定，下载这个文件，太大的话，应该是创建下载功能，或者播放文件，或者预览文件。不能是直接放到前端，这里可以考虑，悬浮播放视频，而之后播放框内，提供下载按钮
 export function FileDownloads({ files }: { files: FileVO[] }) {
+  const { t } = useTranslation();
   const [selectedVideo, setSelectedVideo] = useState<FileVO | null>(null);
 
   if (!files || files.length === 0) {
     return (
       <div className="text-center text-muted-foreground py-8">
-        暂无文件可下载
+        {t('home.empty.files')}
       </div>
     );
   }

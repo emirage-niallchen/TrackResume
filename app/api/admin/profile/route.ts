@@ -1,15 +1,12 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { log } from 'console';
+import { getContentLanguageFromRequest } from '@/lib/validations/contentLanguage';
 
 export async function PUT(request: Request) {
   try {
+    const language = getContentLanguageFromRequest(request);
     const data = await request.json();
 
-    console.log("data", data);
-    
-
-  
     // 更新管理员基本信息
     const updatedAdmin = await prisma.admin.update({
       where: { id: data.id },
@@ -20,14 +17,14 @@ export async function PUT(request: Request) {
       },
     });
 
-
-    await prisma.customField.deleteMany();
+    await prisma.customField.deleteMany({ where: { language } });
 
     // 创建新的自定义字段
     if (data.customFields && data.customFields.length > 0) {
 
       await prisma.customField.createMany({
         data: data.customFields.map((field: any, index: number) => ({
+          language,
           label: field.label,
           value: field.value,
           type: field.type || 'text',
@@ -51,13 +48,13 @@ export async function PUT(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const admin = await prisma.admin.findFirst();
-
-    console.log("admin.background", admin?.background);
+    const language = getContentLanguageFromRequest(request);
+    const admin = await prisma.admin.findFirst({ where: { language } });
 
     const customFields = await prisma.customField.findMany({
+      where: { language },
       orderBy: { order: 'asc' },
     });
 

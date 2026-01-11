@@ -12,11 +12,14 @@ import { toast } from "sonner";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
 import ChangePasswordDialog from "./ChangePasswordDialog";
+import { useAdminContentLanguage } from "@/lib/context/AdminContentLanguageProvider";
+import { Languages } from "lucide-react";
 
 export default function AdminHeader() {
   const router = useRouter();
   const { data: unreadCount } = useSWR<number>('/api/inbox/unread', fetcher);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const { language, setLanguage } = useAdminContentLanguage();
 
   const handleSignOut = async () => {
     try {
@@ -55,6 +58,18 @@ export default function AdminHeader() {
 
           {/* 右侧导航 */}
           <div className="flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              className="hover:bg-accent hover:text-accent-foreground gap-2"
+              onClick={() => {
+                const next = language === "zh" ? "en" : "zh";
+                setLanguage(next);
+                mutate(() => true);
+              }}
+            >
+              <Languages className="h-4 w-4" />
+              {language === "zh" ? "ZH" : "EN"}
+            </Button>
             <Link href="/">
               <Button variant="ghost" className="hover:bg-accent hover:text-accent-foreground">
                 首页

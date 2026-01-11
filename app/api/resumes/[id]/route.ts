@@ -2,6 +2,7 @@
 
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { getContentLanguageFromRequest } from "@/lib/validations/contentLanguage"
 
 // 获取单个简历
 export async function GET(
@@ -9,10 +10,9 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const resume = await prisma.resume.findUnique({
-      where: {
-        id: params.id,
-      },
+    const language = getContentLanguageFromRequest(request)
+    const resume = await prisma.resume.findFirst({
+      where: { id: params.id, language },
     })
 
     if (!resume) {
@@ -31,7 +31,16 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    const language = getContentLanguageFromRequest(request)
     const body = await request.json()
+
+    const existing = await prisma.resume.findFirst({
+      where: { id: params.id, language },
+      select: { id: true },
+    })
+    if (!existing) {
+      return new NextResponse("简历不存在", { status: 404 })
+    }
 
     const resume = await prisma.resume.update({
       where: {
@@ -63,6 +72,14 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const language = getContentLanguageFromRequest(request)
+    const existing = await prisma.resume.findFirst({
+      where: { id: params.id, language },
+      select: { id: true },
+    })
+    if (!existing) {
+      return new NextResponse("简历不存在", { status: 404 })
+    }
     await prisma.resume.delete({
       where: {
         id: params.id,

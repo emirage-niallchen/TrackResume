@@ -2,3 +2,4 @@
 export * from './resume';
 export * from './layout';
 export * from './models'; 
+export * from './file';

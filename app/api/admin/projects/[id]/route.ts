@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { date, z } from "zod";
 import { uploadToS3, deleteFromS3 } from "@/lib/utils/s3";
+import { getContentLanguageFromRequest } from "@/lib/validations/contentLanguage";
 
 // 校验编辑参数
 const updateProjectSchema = z.object({
@@ -29,6 +30,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     console.log("编辑项目");
 
     const id = params.id;
+    const language = getContentLanguageFromRequest(req);
+    const existingProject = await prisma.project.findFirst({ where: { id, language } });
+    if (!existingProject) {
+      return NextResponse.json({ success: false, error: "Project not found" }, { status: 404 });
+    }
     // 判断请求类型
     const contentType = req.headers.get("content-type") || "";
     if (contentType.includes("multipart/form-data")) {
@@ -94,7 +100,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
           isPublished,
           images: {
             deleteMany: {}, // 先清空
-            create: allImages
+            create: allImages.map((img: any) => ({ ...img, language }))
           },
           // tags 字段不要 set 了
         },
@@ -119,6 +125,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       await prisma.projectLink.createMany({
         data: links.map((link: any) => ({
           projectId: id,
+          language,
           ...link
         })),
       });
@@ -139,7 +146,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
           isPublished: body.isPublished,
           images: {
             set: [],
-            create: body.images,
+            create: (body.images || []).map((img: any) => ({ ...img, language })),
           },
           tags: {
             set: body.tags.map((tagId: string) => ({ id: tagId })),
@@ -161,6 +168,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = params.id;
+    const language = getContentLanguageFromRequest(req);
+    const existingProject = await prisma.project.findFirst({ where: { id, language } });
+    if (!existingProject) {
+      return NextResponse.json({ success: false, error: "Project not found" }, { status: 404 });
+    }
     await prisma.project.delete({
       where: { id },
     });

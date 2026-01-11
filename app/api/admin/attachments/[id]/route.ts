@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkAuth } from "@/lib/auth";
 import { deleteFromS3 } from "@/lib/utils/s3";
+import { getContentLanguageFromRequest } from "@/lib/validations/contentLanguage";
 
 export async function PATCH(
   request: NextRequest,
@@ -26,6 +27,15 @@ export async function PATCH(
       return new Response(JSON.stringify({ error: "缺少文件ID" }), {
         status: 400,
       });
+    }
+
+    const language = getContentLanguageFromRequest(request);
+    const existingFile = await prisma.file.findFirst({
+      where: { id, language },
+      select: { id: true },
+    });
+    if (!existingFile) {
+      return new Response(JSON.stringify({ error: "文件不存在" }), { status: 404 });
     }
 
     // 更新文件信息
@@ -85,8 +95,9 @@ export async function DELETE(
     }
 
     // 先获取文件信息
-    const file = await prisma.file.findUnique({
-      where: { id }
+    const language = getContentLanguageFromRequest(request);
+    const file = await prisma.file.findFirst({
+      where: { id, language }
     });
 
     if (!file) {

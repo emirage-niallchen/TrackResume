@@ -2,12 +2,15 @@
 
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
+import { getContentLanguageFromRequest } from "@/lib/validations/contentLanguage"
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const language = getContentLanguageFromRequest(request)
     const resumes = await prisma.resume.findMany({
       where: {
         isPublished: true,
+        language,
       },
       include: {
         tags: {
@@ -33,9 +36,13 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const language = getContentLanguageFromRequest(request)
     const json = await request.json()
     const resume = await prisma.resume.create({
-      data: json,
+      data: {
+        ...json,
+        language: json?.language ?? language,
+      },
     })
     
     return NextResponse.json(resume)

@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/popover";
 import {ChevronsUpDown, X, Upload } from "lucide-react";
 import Image from "next/image";
+import { useAdminContentLanguage } from "@/lib/context/AdminContentLanguageProvider";
 
 interface Tag {
   id: string;
@@ -44,6 +45,7 @@ export function EditTechDialog({
   onSuccess
 }: EditTechDialogProps) {
   const [loading, setLoading] = useState(false);
+  const { language, withLanguage } = useAdminContentLanguage();
   const [formData, setFormData] = useState({
     name: tech.name || "",
     description: tech.description || "",
@@ -56,11 +58,12 @@ export function EditTechDialog({
   );
   const [openTagSelect, setOpenTagSelect] = useState(false);
 
-  const { data: allTags = [] } = useSWR<Tag[]>("/api/tags", (url: string) =>
+  const { data: allTags } = useSWR<Tag[] | unknown>(withLanguage("/api/tags"), (url: string) =>
     fetch(url).then(res => res.json())
   );
 
-  const availableTags = allTags.filter(
+  const tagsData = Array.isArray(allTags) ? allTags : [];
+  const availableTags = tagsData.filter(
     tag => !selectedTags.some(selected => selected.id === tag.id)
   );
 
@@ -70,8 +73,8 @@ export function EditTechDialog({
 
     try {
       const url = tech.id 
-        ? `/api/admin/tech/${tech.id}`
-        : "/api/admin/tech";
+        ? withLanguage(`/api/admin/tech/${tech.id}`)
+        : withLanguage("/api/admin/tech");
       
       const res = await fetch(url, {
         method: tech.id ? "PATCH" : "POST",
@@ -80,6 +83,7 @@ export function EditTechDialog({
         },
         body: JSON.stringify({
           ...formData,
+          language,
           tags: selectedTags.map(tag => tag.id)
         })
       });
@@ -120,7 +124,7 @@ export function EditTechDialog({
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await fetch('/api/admin/tech/icon', {
+      const response = await fetch(withLanguage('/api/admin/tech/icon'), {
         method: 'POST',
         body: formData,
       });

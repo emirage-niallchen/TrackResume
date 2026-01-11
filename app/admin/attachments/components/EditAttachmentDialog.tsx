@@ -22,6 +22,7 @@ import {
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import useSWR from "swr";
+import { useAdminContentLanguage } from "@/lib/context/AdminContentLanguageProvider";
 
 interface Tag {
   id: string;
@@ -48,6 +49,7 @@ export function EditAttachmentDialog({
   attachment,
   onSuccess,
 }: EditAttachmentDialogProps) {
+  const { withLanguage } = useAdminContentLanguage();
   const [name, setName] = useState(attachment.name);
   const [isPublished, setIsPublished] = useState(attachment.isPublished);
   const [uploading, setUploading] = useState(false);
@@ -57,18 +59,19 @@ export function EditAttachmentDialog({
   );
   const [openTagSelect, setOpenTagSelect] = useState(false);
 
-  const { data: allTags = [] } = useSWR<Tag[]>("/api/tags", (url: string) =>
+  const { data: allTags } = useSWR<Tag[] | unknown>(withLanguage("/api/tags"), (url: string) =>
     fetch(url).then(res => res.json())
   );
 
-  const availableTags = allTags.filter(
+  const tagsData = Array.isArray(allTags) ? allTags : [];
+  const availableTags = tagsData.filter(
     tag => !selectedTags.some(selected => selected.id === tag.id)
   );
 
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/attachments/${attachment.id}`, {
+      const res = await fetch(withLanguage(`/api/admin/attachments/${attachment.id}`), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -103,7 +106,7 @@ export function EditAttachmentDialog({
 
     try {
       // 先上传新文件
-      const uploadRes = await fetch("/api/admin/attachments", {
+      const uploadRes = await fetch(withLanguage("/api/admin/attachments"), {
         method: "POST",
         body: formData,
       });
@@ -112,7 +115,7 @@ export function EditAttachmentDialog({
       const newFile = await uploadRes.json();
 
       // 更新文件信息，保持原有的名称和状态
-      const updateRes = await fetch(`/api/admin/attachments/${newFile.id}`, {
+      const updateRes = await fetch(withLanguage(`/api/admin/attachments/${newFile.id}`), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -127,7 +130,7 @@ export function EditAttachmentDialog({
       if (!updateRes.ok) throw new Error("信息更新失败");
 
       // 删除旧文件
-      await fetch(`/api/admin/attachments/${attachment.id}`, {
+      await fetch(withLanguage(`/api/admin/attachments/${attachment.id}`), {
         method: "DELETE",
       });
 

@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Admin, CustomField } from "@prisma/client";
 import Image from "next/image";
-import { FileVO } from "@/app/api/files/route";
+import type { FileVO } from "@/lib/types";
 import { FileDownloads } from "./file-downloads";
 import { useWebsiteSettings } from "@/lib/hooks/useWebsiteSettings";
 export function HeroSection({ adminData, customFields, files }: { adminData: Admin, customFields: CustomField[], files: FileVO[] }) {

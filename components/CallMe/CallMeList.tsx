@@ -1,28 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { getCallMeIcon } from "@/lib/utils";
 import { EditCallMeDialog, type CallMeItem } from "@/components/CallMe/EditCallMeDialog";
+import { useAdminContentLanguage } from "@/lib/context/AdminContentLanguageProvider";
 
 export function CallMeList() {
   const [items, setItems] = useState<CallMeItem[]>([]);
   const [editing, setEditing] = useState<CallMeItem | null>(null);
+  const { withLanguage } = useAdminContentLanguage();
 
-  const fetchItems = async () => {
-    const res = await fetch("/api/admin/call-me");
+  const fetchItems = useCallback(async () => {
+    const res = await fetch(withLanguage("/api/admin/call-me"));
     const data = await res.json();
     setItems(Array.isArray(data) ? data : []);
-  };
+  }, [withLanguage]);
 
   useEffect(() => {
     fetchItems();
-  }, []);
+  }, [fetchItems]);
 
   const togglePublish = async (id: string, isPublished: boolean) => {
     try {
-      const res = await fetch(`/api/admin/call-me/${id}`, {
+      const res = await fetch(withLanguage(`/api/admin/call-me/${id}`), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isPublished }),
@@ -36,7 +38,7 @@ export function CallMeList() {
 
   const removeItem = async (id: string) => {
     try {
-      const res = await fetch(`/api/admin/call-me/${id}`, { method: "DELETE" });
+      const res = await fetch(withLanguage(`/api/admin/call-me/${id}`), { method: "DELETE" });
       if (!res.ok) throw new Error("Delete failed");
       toast.success("已删除");
       await fetchItems();

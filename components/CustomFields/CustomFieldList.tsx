@@ -1,27 +1,29 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { CustomField } from '@/lib/types';
 import { Button } from '@/components/ui/button';
+import { useAdminContentLanguage } from '@/lib/context/AdminContentLanguageProvider';
 
 /**
  * 自定义字段列表组件
  */
 export function CustomFieldList() {
   const [fields, setFields] = useState<CustomField[]>([]);
+  const { withLanguage } = useAdminContentLanguage();
+
+  const fetchFields = useCallback(async () => {
+    const response = await fetch(withLanguage('/api/custom-fields'));
+    const data = await response.json();
+    setFields(data);
+  }, [withLanguage]);
 
   useEffect(() => {
     fetchFields();
-  }, []);
-
-  const fetchFields = async () => {
-    const response = await fetch('/api/custom-fields');
-    const data = await response.json();
-    setFields(data);
-  };
+  }, [fetchFields]);
 
   const togglePublish = async (id: string, isPublished: boolean) => {
-    await fetch(`/api/custom-fields/${id}`, {
+    await fetch(withLanguage(`/api/custom-fields/${id}`), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ isPublished })

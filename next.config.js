@@ -14,12 +14,16 @@ const nextConfig = {
   },
   // 图片优化配置
   images: {
-    domains: ['localhost'],
+    domains: [
+      'localhost',
+      // S3 bucket hostnames used by this project (add more if you have multiple buckets)
+      'aritithm-s3-cv-dev.s3.us-east-1.amazonaws.com',
+    ],
     remotePatterns: [
       // AWS S3 (virtual-hosted-style): https://<bucket>.s3.<region>.amazonaws.com/<key>
       {
         protocol: 'https',
-        hostname: `*.s3.${awsRegion}.amazonaws.com`,
+        hostname: `**.s3.${awsRegion}.amazonaws.com`,
         pathname: '/**',
       },
     ],

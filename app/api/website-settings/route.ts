@@ -2,22 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { deleteFromS3 } from '@/lib/utils/s3';
+import { getContentLanguageFromRequest } from '@/lib/validations/contentLanguage';
 
 const updateSettingsSchema = z.object({
   websiteTitle: z.string().optional(),
   favicon: z.string().nullable().optional(),
 });
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     console.log('Fetching website settings');
+    const language = getContentLanguageFromRequest(request);
     
     // 获取或创建默认设置
-    let settings = await prisma.settings.findFirst();
+    let settings = await prisma.settings.findFirst({ where: { language } });
     
     if (!settings) {
       settings = await prisma.settings.create({
         data: {
+          language,
           websiteTitle: 'Resume Portfolio',
           favicon: null,
         },
@@ -37,6 +40,7 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
+    const language = getContentLanguageFromRequest(request);
     const body = await request.json();
     const validatedData = updateSettingsSchema.parse(body);
     
@@ -46,7 +50,7 @@ export async function PUT(request: NextRequest) {
     });
     
     // Get existing settings
-    let settings = await prisma.settings.findFirst();
+    let settings = await prisma.settings.findFirst({ where: { language } });
     
     // If favicon is being set to null, delete old file from S3
     if (validatedData.favicon === null && settings?.favicon) {
@@ -72,6 +76,7 @@ export async function PUT(request: NextRequest) {
       // Create new settings
       settings = await prisma.settings.create({
         data: {
+          language,
           websiteTitle: validatedData.websiteTitle || 'Resume Portfolio',
           favicon: validatedData.favicon ?? null,
         },

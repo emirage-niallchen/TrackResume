@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { TagSchema, TagFormValues } from "@/lib/validations/tag"
 import { Tag } from "@/lib/types"
+import { useAdminContentLanguage } from "@/lib/context/AdminContentLanguageProvider"
 
 interface TagFormProps {
   onSubmit: (values: TagFormValues) => void
@@ -23,6 +24,7 @@ interface TagFormProps {
 
 export function TagForm({ onSubmit, defaultValues }: TagFormProps) {
   const [loading, setLoading] = useState(false)
+  const { language, withLanguage } = useAdminContentLanguage()
   const form = useForm<TagFormValues>({
     resolver: zodResolver(TagSchema),
     defaultValues: {
@@ -37,7 +39,7 @@ export function TagForm({ onSubmit, defaultValues }: TagFormProps) {
   const handleSubmit = async (values: TagFormValues) => {
     try {
       setLoading(true)
-      const url = "/api/tags"
+      const url = withLanguage("/api/tags")
       const method = defaultValues ? "PUT" : "POST"
       const res = await fetch(url, {
         method,
@@ -45,6 +47,7 @@ export function TagForm({ onSubmit, defaultValues }: TagFormProps) {
         body: JSON.stringify({
           ...values,
           id: defaultValues?.id,
+          language,
         }),
       })
 

@@ -18,6 +18,7 @@ import {
 import { EditTechDialog } from "./components/EditTechDialog";
 import { Plus, ArrowUp, ArrowDown, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useAdminContentLanguage } from "@/lib/context/AdminContentLanguageProvider";
 
 interface Tag {
   id: string;
@@ -33,9 +34,10 @@ export default function TechPage() {
   const [editTech, setEditTech] = useState<Tech | null>(null);
   const [searchName, setSearchName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const { withLanguage } = useAdminContentLanguage();
   
   const { data: techs, mutate, error, isLoading } = useSWR<Tech[]>(
-    `/api/admin/tech${searchQuery ? `?name=${encodeURIComponent(searchQuery)}` : ''}`,
+    withLanguage(`/api/admin/tech${searchQuery ? `?name=${encodeURIComponent(searchQuery)}` : ''}`),
     async (url: string) => {
       const res = await fetch(url, {
         method: 'GET',
@@ -54,7 +56,7 @@ export default function TechPage() {
 
   const handleDelete = async (id: string) => {
     try {
-      const res = await fetch(`/api/admin/tech/${id}`, {
+      const res = await fetch(withLanguage(`/api/admin/tech/${id}`), {
         method: "DELETE"
       });
 
@@ -68,7 +70,7 @@ export default function TechPage() {
 
   const handleTogglePublish = async (id: string, isPublished: boolean) => {
     try {
-      const res = await fetch(`/api/admin/tech/${id}`, {
+      const res = await fetch(withLanguage(`/api/admin/tech/${id}`), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json"
@@ -87,7 +89,7 @@ export default function TechPage() {
 
   const handleReorder = async (id: string, direction: 'up' | 'down') => {
     try {
-      const res = await fetch('/api/admin/tech/reorder', {
+      const res = await fetch(withLanguage('/api/admin/tech/reorder'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

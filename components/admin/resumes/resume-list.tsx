@@ -9,10 +9,11 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { ResumeForm } from "./resume-form"
-import { useResumes } from "@/lib/hooks/use-resumes"
+import { useResumesByLanguage } from "@/lib/hooks/use-resumes"
 import { formatResumeDate } from "@/lib/utils/dateFormatter"
 import { Resume } from "@prisma/client"
 import { Edit2, Trash2 } from "lucide-react"
+import { useAdminContentLanguage } from "@/lib/context/AdminContentLanguageProvider"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,7 +29,8 @@ export function ResumeList() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingResume, setEditingResume] = useState<Resume | null>(null)
   const [deletingResume, setDeletingResume] = useState<Resume | null>(null)
-  const { resumes, isLoading, error, mutate } = useResumes()
+  const { language, withLanguage } = useAdminContentLanguage()
+  const { resumes, isLoading, error, mutate } = useResumesByLanguage(language)
 
   const handleEdit = (resume: Resume) => {
     setEditingResume(resume)
@@ -39,7 +41,7 @@ export function ResumeList() {
     if (!deletingResume) return
 
     try {
-      const response = await fetch(`/api/resumes/${deletingResume.id}`, {
+      const response = await fetch(withLanguage(`/api/resumes/${deletingResume.id}`), {
         method: "DELETE",
       })
 

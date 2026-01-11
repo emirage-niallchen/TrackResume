@@ -5,6 +5,7 @@ import { Tag } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Pencil, Trash2 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useAdminContentLanguage } from "@/lib/context/AdminContentLanguageProvider"
 
 interface UseTagColumnsProps {
   mutate: () => void
@@ -12,6 +13,7 @@ interface UseTagColumnsProps {
 }
 
 export function useTagColumns({ mutate, onEdit }: UseTagColumnsProps) {
+  const { withLanguage } = useAdminContentLanguage()
 
   const handleDelete = async (tag: Tag) => {
 
@@ -20,7 +22,7 @@ export function useTagColumns({ mutate, onEdit }: UseTagColumnsProps) {
     }
 
     try {
-      const response = await fetch(`/api/tags/${tag.id}`, {
+      const response = await fetch(withLanguage(`/api/tags/${tag.id}`), {
         method: 'DELETE',
       })
       

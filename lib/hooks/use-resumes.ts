@@ -1,16 +1,38 @@
 import useSWR from "swr"
-import { Resume } from "@prisma/client"
+import type { Resume } from "@prisma/client"
+import type { ContentLanguage } from "@/lib/validations/contentLanguage"
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
+async function fetcher(url: string): Promise<Resume[]> {
+  const response = await fetch(url)
+  const data = await response.json().catch(() => null)
+
+  if (!response.ok) {
+    const message =
+      (data && typeof data === "object" && "error" in data && typeof (data as any).error === "string"
+        ? (data as any).error
+        : "Request failed")
+    throw new Error(message)
+  }
+
+  if (!Array.isArray(data)) {
+    throw new Error("Invalid response")
+  }
+
+  return data as Resume[]
+}
 
 export function useResumes() {
+  return useResumesByLanguage()
+}
+
+export function useResumesByLanguage(language?: ContentLanguage) {
   const { data, error, isLoading, mutate } = useSWR<Resume[]>(
-    "/api/resumes",
+    language ? `/api/resumes?language=${language}` : "/api/resumes",
     fetcher
   )
 
   return {
-    resumes: data || [],
+    resumes: data ?? [],
     isLoading,
     error,
     mutate,

@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { uploadToS3 } from "@/lib/utils/s3";
+import { getContentLanguageFromRequest } from "@/lib/validations/contentLanguage";
 
 export async function POST(request: Request) {
   try {
+    const language = getContentLanguageFromRequest(request);
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const tags = formData.get("tags") as string;
@@ -23,6 +25,7 @@ export async function POST(request: Request) {
     // 保存到数据库
     const fileRecord = await prisma.file.create({
       data: {
+        language,
         name: file.name,
         path: fileUrl,
         type: file.type,
@@ -46,8 +49,10 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const language = getContentLanguageFromRequest(request);
   const files = await prisma.file.findMany({
+    where: { language },
     include: {
       tags: {
         include: {

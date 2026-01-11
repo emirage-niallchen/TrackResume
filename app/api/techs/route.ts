@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { Tech } from '@prisma/client';
 import { Tag } from '@prisma/client';
+import { getContentLanguageFromRequest } from '@/lib/validations/contentLanguage';
 
 // 强制动态渲染，避免静态生成
 export const dynamic = 'force-dynamic';
@@ -14,17 +15,20 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const tags = searchParams.getAll('tags');
+    const language = getContentLanguageFromRequest(request);
     
     const techs = await prisma.tech.findMany({
       where: {
         isPublished: true,
+        language,
         ...(tags.length > 0 && {
           tags: {
             some: {
               tag: {
                 name: {
                   in: tags
-                }
+                },
+                language,
               }
             }
           }
@@ -32,6 +36,7 @@ export async function GET(request: NextRequest) {
       },
       include: {
         tags: {
+          where: { tag: { language } },
           include: {
             tag: true
           }

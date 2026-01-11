@@ -4,6 +4,9 @@ import ClientWrapper from "@/components/common/ClientWrapper";
 import { Providers } from "@/components/providers";
 import DynamicMetadata from "@/components/common/DynamicMetadata";
 import { Metadata } from 'next';
+import { headers } from "next/headers";
+import { prisma } from "@/lib/prisma";
+import { toContentLanguage } from "@/lib/utils";
 
 // 动态生成metadata - 使用动态路由确保实时更新
 export const dynamic = 'force-dynamic';
@@ -11,43 +14,30 @@ export const revalidate = 0;
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    console.log('Generating dynamic metadata for layout');
-    
-    // 在Docker环境中，使用内部服务名或localhost
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    const metadataUrl = `${baseUrl}/api/website-settings/metadata`;
-    
-    console.log('Fetching metadata from:', metadataUrl);
-    
-    const response = await fetch(metadataUrl, {
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      }
-    });
-    
-    if (!response.ok) {
-      console.error('Failed to fetch metadata, status:', response.status);
-      throw new Error('Failed to fetch metadata');
-    }
-    
-    const { websiteTitle, favicon } = await response.json();
-    
-    console.log('Dynamic metadata generated', { websiteTitle, hasFavicon: !!favicon });
+    const hdrs = await headers();
+    const acceptLanguage = hdrs.get("accept-language") ?? "";
+    const language = toContentLanguage(acceptLanguage);
+
+    const settings =
+      (await prisma.settings.findFirst({ where: { language } })) ??
+      (language !== "zh" ? await prisma.settings.findFirst({ where: { language: "zh" } }) : null);
+
+    const websiteTitle = settings?.websiteTitle ?? "Resume Portfolio";
+    const favicon = settings?.favicon || "/favicon.svg";
+
+    console.log("Metadata: generated", { language, hasTitle: !!settings?.websiteTitle, hasFavicon: !!settings?.favicon });
     
     return {
-      title: websiteTitle || 'Resume Portfolio',
+      title: websiteTitle,
       description: 'Professional resume and portfolio showcase',
       icons: {
-        icon: favicon || '/favicon.svg',
-        shortcut: favicon || '/favicon.svg',
-        apple: favicon || '/favicon.svg',
+        icon: favicon,
+        shortcut: favicon,
+        apple: favicon,
       },
     };
   } catch (error) {
-    console.error('Failed to generate metadata:', error);
+    console.error("Metadata: generate failed", error);
     
     // 返回默认metadata作为fallback
     return {

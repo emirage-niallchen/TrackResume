@@ -9,12 +9,14 @@ import { useTagsData } from "@/lib/hooks/use-tags"
 import { Tag } from "@/lib/types"
 import { TagForm } from "@/components/tag/tag-form"
 import { useToast } from "@/hooks/use-toast"
+import { useAdminContentLanguage } from "@/lib/context/AdminContentLanguageProvider"
 
 export default function TagsPage() {
   const [open, setOpen] = useState(false)
   const [editingTag, setEditingTag] = useState<Tag | null>(null)
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
-  const { data: tags, isLoading, mutate } = useTagsData() as {
+  const { language } = useAdminContentLanguage()
+  const { data: tags, isLoading, mutate } = useTagsData(language) as {
     data: Tag[] | undefined,
     isLoading: boolean,
     mutate: () => void

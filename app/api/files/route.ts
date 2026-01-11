@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { File ,Tag} from '@prisma/client';
+import { getContentLanguageFromRequest } from '@/lib/validations/contentLanguage';
 
 // 强制动态渲染，避免静态生成
 export const dynamic = 'force-dynamic';
@@ -13,6 +14,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const tags = searchParams.getAll('tags');
+    const language = getContentLanguageFromRequest(request);
 
     console.log('Files API - 查询参数:', { tags });
     console.log('Files API - 数据库连接状态: 正常');
@@ -29,18 +31,20 @@ export async function GET(request: Request) {
 
     const files = await prisma.file.findMany({
       where: {
+        language,
         // 临时注释掉 isPublished 条件，返回所有文件
         // isPublished: true,
         ...(tags.length > 0 && {
           tags: {
             some: {
-              tag: { name: { in: tags } }
+              tag: { name: { in: tags }, language }
             }
           }
         }),
       },
       include: {
         tags: {
+          where: { tag: { language } },
           include: {
             tag: true
           }

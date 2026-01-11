@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { uploadToS3, deleteFromS3 } from "@/lib/utils/s3";
+import { getContentLanguageFromRequest } from "@/lib/validations/contentLanguage";
 
 export async function POST(request: Request) {
   try {
+    const language = getContentLanguageFromRequest(request);
     const formData = await request.formData();
     const file = formData.get("file") as File;
     
@@ -22,7 +24,7 @@ export async function POST(request: Request) {
     }
 
     // 获取第一个管理员
-    const admin = await prisma.admin.findFirst();
+    const admin = await prisma.admin.findFirst({ where: { language } });
     if (!admin) {
       return NextResponse.json(
         { error: "未找到管理员账户" },

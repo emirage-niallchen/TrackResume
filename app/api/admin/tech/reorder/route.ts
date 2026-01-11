@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkAuth } from "@/lib/auth";
+import { getContentLanguageFromRequest } from "@/lib/validations/contentLanguage";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,9 +23,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "技术栈不存在" }, { status: 404 });
     }
 
+    const language = currentTech.language ?? getContentLanguageFromRequest(request);
+
     // 根据移动方向查找相邻的技术栈
     const adjacentTech = await prisma.tech.findFirst({
       where: {
+        language,
         order: direction === 'up' 
           ? { lt: currentTech.order }
           : { gt: currentTech.order }

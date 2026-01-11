@@ -18,6 +18,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
+import { useAdminContentLanguage } from "@/lib/context/AdminContentLanguageProvider";
 
 /**
  * 项目表单数据校验规则
@@ -56,8 +57,9 @@ export const AddProjectDialog: React.FC<AddProjectDialogProps> = React.memo(({ o
   const [openTagSelect, setOpenTagSelect] = useState(false);
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [oldImages, setOldImages] = useState<{ path: string; alt?: string }[]>([]);
+  const { language, withLanguage } = useAdminContentLanguage();
 
-  const { data: allTags = [] } = useSWR<Tag[]>("/api/tags", (url: string) =>
+  const { data: allTags } = useSWR<Tag[] | unknown>(withLanguage("/api/tags"), (url: string) =>
     fetch(url).then(res => res.json())
   );
 
@@ -89,7 +91,8 @@ export const AddProjectDialog: React.FC<AddProjectDialogProps> = React.memo(({ o
   const projectLinks = watch("links");
   const images = watch("images");
 
-  const availableTags = allTags.filter(
+  const tagsData = Array.isArray(allTags) ? allTags : [];
+  const availableTags = tagsData.filter(
     tag => !selectedTags.some((selected) => selected.id === tag.id)
   );
 
@@ -173,6 +176,7 @@ export const AddProjectDialog: React.FC<AddProjectDialogProps> = React.memo(({ o
     setLoading(true);
     try {
       const formDataToSend = new FormData();
+      formDataToSend.append("language", language);
       formDataToSend.append("name", data.name);
       formDataToSend.append("jobRole", data.jobRole || "");
       formDataToSend.append("jobTech", data.jobTech || "");
@@ -189,13 +193,13 @@ export const AddProjectDialog: React.FC<AddProjectDialogProps> = React.memo(({ o
       let res;
       if (project?.id) {
         // 编辑模式
-        res = await fetch(`/api/admin/projects/${project.id}`, {
+        res = await fetch(withLanguage(`/api/admin/projects/${project.id}`), {
           method: "PUT",
           body: formDataToSend
         });
       } else {
         // 新增模式
-        res = await fetch("/api/admin/projects", {
+        res = await fetch(withLanguage("/api/admin/projects"), {
           method: "POST",
           body: formDataToSend
         });

@@ -6,7 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
-import { fetcher, getCallMeIcon } from "@/lib/utils";
+import { fetcher, getCallMeIcon, toContentLanguage, withContentLanguageParam } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface CallMeItem {
   id: string;
@@ -19,16 +20,19 @@ interface CallMeItem {
 
 export function ContactInfo() {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-  const { data: callMeItems, isLoading } = useSWR<CallMeItem[]>("/api/call-me", fetcher);
+  const { t, i18n } = useTranslation();
+  const language = toContentLanguage(i18n.resolvedLanguage);
+  const key = withContentLanguageParam("/api/call-me", language);
+  const { data: callMeItems, isLoading } = useSWR<CallMeItem[]>(key, fetcher);
 
   const handleCopy = async (text: string, index: number) => {
     try {
       await navigator.clipboard.writeText(text);
       setCopiedIndex(index);
-      toast.success("复制成功！");
+      toast.success(t("home.contact.info.copySuccess"));
       setTimeout(() => setCopiedIndex(null), 2000);
     } catch (err) {
-      toast.error("复制失败，请手动复制");
+      toast.error(t("home.contact.info.copyFailed"));
     }
   };
 
@@ -36,7 +40,9 @@ export function ContactInfo() {
     return (
       <Card className="mt-4">
         <CardContent className="p-4">
-          <div className="text-sm text-muted-foreground">加载中...</div>
+          <div className="text-sm text-muted-foreground">
+            {t("home.contact.info.loading")}
+          </div>
         </CardContent>
       </Card>
     );
@@ -93,7 +99,9 @@ export function ContactInfo() {
             </div>
           )})}
           {items.length === 0 && (
-            <div className="text-sm text-muted-foreground">暂无联系方式</div>
+            <div className="text-sm text-muted-foreground">
+              {t("home.contact.info.empty")}
+            </div>
           )}
         </div>
       </CardContent>

@@ -2,8 +2,10 @@
 
 import { CustomFieldList } from "@/components/CustomFields/CustomFieldList";
 import { CustomFieldForm } from "@/components/CustomFields/CustomFieldForm";
+import { useAdminContentLanguage } from "@/lib/context/AdminContentLanguageProvider";
 
 export default function CustomFieldsPage() {
+  const { language, withLanguage } = useAdminContentLanguage();
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">自定义字段管理</h1>
@@ -13,10 +15,10 @@ export default function CustomFieldsPage() {
           <h2 className="text-xl font-semibold mb-4">添加字段</h2>
           <CustomFieldForm
             onSubmit={async (data) => {
-              await fetch("/api/custom-fields", {
+              await fetch(withLanguage("/api/custom-fields"), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data),
+                body: JSON.stringify({ ...data, language }),
               });
             }}
           />

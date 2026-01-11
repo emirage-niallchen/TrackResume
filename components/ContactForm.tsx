@@ -16,22 +16,24 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-
-const formSchema = z.object({
-  description: z
-    .string()
-    .min(1, {
-      message: "请输入您的留言",
-    })
-    .max(500, {
-      message: "太多了太多了，塞不下了",
-    })
-    .trim(),
-});
+import { useTranslation } from "react-i18next";
 
 export function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
+
+  const formSchema = z.object({
+    description: z
+      .string()
+      .min(1, {
+        message: t("home.contact.form.validation.required"),
+      })
+      .max(500, {
+        message: t("home.contact.form.validation.tooLong"),
+      })
+      .trim(),
+  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -49,18 +51,18 @@ export function ContactForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
-      if (!res.ok) throw new Error("提交失败");
+      if (!res.ok) throw new Error("Contact submit failed");
       form.reset();
       toast({
-        title: "感谢您的留言！",
-        description: "我将尽快与您取得联系！🙏 😄",
+        title: t("home.contact.form.toast.success.title"),
+        description: t("home.contact.form.toast.success.description"),
       });
     } catch (error) {
-      console.error("提交表单时发生错误:", error);
+      console.error("Contact form submit failed:", error);
       toast({
         variant: "destructive",
-        title: "提交失败",
-        description: "非常抱歉，服务器好像有一点问题，请稍后再试🙇🙇🙇",
+        title: t("home.contact.form.toast.error.title"),
+        description: t("home.contact.form.toast.error.description"),
       });
     } finally {
       setIsSubmitting(false);
@@ -70,6 +72,7 @@ export function ContactForm() {
   return (
     <Form {...form}>
       <form 
+        key={i18n.resolvedLanguage}
         onSubmit={form.handleSubmit(onSubmit)} 
         className="h-full flex flex-col"
         noValidate
@@ -79,10 +82,12 @@ export function ContactForm() {
           name="description"
           render={({ field }) => (
             <FormItem className="flex-1 flex flex-col">
-              <FormLabel className="text-foreground mb-2">感谢您能够留下联系方式：</FormLabel>
+              <FormLabel className="text-foreground mb-2">
+                {t("home.contact.form.label")}
+              </FormLabel>
               <FormControl className="flex-1">
                 <Textarea
-                  placeholder="请输入..."
+                  placeholder={t("home.contact.form.placeholder")}
                   className="resize-none h-[calc(100%-2rem)]"
                   {...field}
                 />
@@ -93,7 +98,9 @@ export function ContactForm() {
         />
         <div className="flex justify-center w-full">
           <Button type="submit" disabled={isSubmitting} className="mt-4 w-32">
-            {isSubmitting ? "提交中..." : "提交"}
+            {isSubmitting
+              ? t("home.contact.form.submitting")
+              : t("home.contact.form.submit")}
           </Button>
         </div>
       </form>

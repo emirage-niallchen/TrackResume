@@ -13,10 +13,13 @@ import { Components } from 'react-markdown';
 import { markdownStyles } from '@/lib/styles/markdown';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
+import { enUS, zhCN } from 'date-fns/locale';
 import Image from 'next/image';
 import { ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
+import LanguageToggle from '@/components/common/LanguageToggle';
+import { toContentLanguage, withContentLanguageParam } from '@/lib/utils';
 
 interface Project {
   id: string;
@@ -37,6 +40,8 @@ export default function ProjectDetailPage() {
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { t, i18n } = useTranslation();
+  const language = toContentLanguage(i18n.resolvedLanguage);
 
   const markdownSanitizeSchema = {
     ...defaultSchema,
@@ -77,24 +82,28 @@ export default function ProjectDetailPage() {
   useEffect(() => {
     const fetchDetail = async () => {
       try {
-        const response = await fetch(`/api/projects/${params.id}/detail`);
+        setLoading(true);
+        setError(null);
+
+        const url = withContentLanguageParam(`/api/projects/${params.id}/detail`, language);
+        const response = await fetch(url);
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || '获取详情失败');
+          throw new Error(data.error || t('projectDetail.error.fetchFailed'));
         }
 
         setProject(data.project);
         setContent(data.content);
       } catch (err) {
-        setError(err instanceof Error ? err.message : '获取详情失败');
+        setError(err instanceof Error ? err.message : t('projectDetail.error.fetchFailed'));
       } finally {
         setLoading(false);
       }
     };
 
     fetchDetail();
-  }, [params.id]);
+  }, [params.id, language, t]);
 
   if (loading) {
     return (
@@ -109,7 +118,7 @@ export default function ProjectDetailPage() {
       <div className="p-6">
         <Card>
           <CardContent className="p-6">
-            <p className="text-red-500">{error || '项目不存在'}</p>
+            <p className="text-red-500">{error || t('projectDetail.error.notFound')}</p>
           </CardContent>
         </Card>
       </div>
@@ -162,8 +171,8 @@ export default function ProjectDetailPage() {
     img: ({ src, alt, ...props }) => {
       if (!src) return null;
       // Use native <img> to avoid next/image remote allowlist limitation for user-provided markdown.
-      // eslint-disable-next-line @next/next/no-img-element
       return (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={src}
           alt={alt || ''}
@@ -182,11 +191,15 @@ export default function ProjectDetailPage() {
 
   const formatDate = (date?: Date) => {
     if (!date) return '';
-    return format(new Date(date), 'yyyy年MM月', { locale: zhCN });
+    const lang = i18n.resolvedLanguage === 'en' ? 'en' : 'zh';
+    const locale = lang === 'en' ? enUS : zhCN;
+    const pattern = lang === 'en' ? 'MMM yyyy' : 'yyyy年MM月';
+    return format(new Date(date), pattern, { locale });
   };
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
+      <LanguageToggle />
       <Card>
         <CardContent className="p-6">
           {/* 项目基本信息 */}
@@ -201,13 +214,13 @@ export default function ProjectDetailPage() {
               <div className="space-y-2">
                 {project.jobRole && (
                   <p className="text-lg">
-                    <span className="font-semibold">职位：</span>
+                    <span className="font-semibold">{t('projectDetail.label.role')}</span>
                     {project.jobRole}
                   </p>
                 )}
                 {project.jobTech && (
                   <p className="text-lg">
-                    <span className="font-semibold">技术栈：</span>
+                    <span className="font-semibold">{t('projectDetail.label.techStack')}</span>
                     {project.jobTech}
                   </p>
                 )}
@@ -215,9 +228,9 @@ export default function ProjectDetailPage() {
               <div className="space-y-2">
                 {project.startTime && (
                   <p className="text-lg">
-                    <span className="font-semibold">时间：</span>
+                    <span className="font-semibold">{t('projectDetail.label.time')}</span>
                     {formatDate(project.startTime)}
-                    {project.endTime ? ` - ${formatDate(project.endTime)}` : ' - 至今'}
+                    {project.endTime ? ` - ${formatDate(project.endTime)}` : ` - ${t('projectDetail.text.present')}`}
                   </p>
                 )}
               </div>

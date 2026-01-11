@@ -21,6 +21,7 @@ import { PlusCircle, Info } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { AvatarUpload } from "./AvatarUpload";
 import { BackgroundUpload } from "./BackgroundUpload";
+import { useAdminContentLanguage } from "@/lib/context/AdminContentLanguageProvider";
 const profileSchema = z.object({
   id: z.string().optional(),
   avatar: z.string().optional(),
@@ -43,6 +44,7 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 export default function ProfileManager() {
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState<ProfileFormData | null>(null);
+  const { withLanguage } = useAdminContentLanguage();
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -60,7 +62,7 @@ export default function ProfileManager() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch("/api/admin/profile");
+        const response = await fetch(withLanguage("/api/admin/profile"));
         if (response.ok) {
           const data = await response.json();
           setProfileData(data);
@@ -76,7 +78,7 @@ export default function ProfileManager() {
       }
     };
     fetchProfile();
-  }, [form]);
+  }, [form, withLanguage]);
 
   const handleAvatarUpload = async (file: File) => {
     try {
@@ -84,7 +86,7 @@ export default function ProfileManager() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("/api/admin/avatar", {
+      const response = await fetch(withLanguage("/api/admin/avatar"), {
         method: "POST",
         body: formData,
       });
@@ -94,7 +96,7 @@ export default function ProfileManager() {
       const data = await response.json();
       form.setValue("avatar", data.avatar);
       
-      const profileResponse = await fetch("/api/admin/profile");
+      const profileResponse = await fetch(withLanguage("/api/admin/profile"));
       if (profileResponse.ok) {
         const profileData = await profileResponse.json();
         setProfileData(profileData);
@@ -114,7 +116,7 @@ export default function ProfileManager() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("/api/admin/background", {
+      const response = await fetch(withLanguage("/api/admin/background"), {
         method: "POST",
         body: formData,
       });
@@ -124,7 +126,7 @@ export default function ProfileManager() {
       const data = await response.json();
       form.setValue("background", data.background);
 
-      const profileResponse = await fetch("/api/admin/profile");
+      const profileResponse = await fetch(withLanguage("/api/admin/profile"));
       if (profileResponse.ok) {
         const profileData = await profileResponse.json();
         setProfileData(profileData);
@@ -159,7 +161,7 @@ export default function ProfileManager() {
       setLoading(true);
       const { avatar, background, ...submitData } = data;
       
-      const response = await fetch("/api/admin/profile", {
+      const response = await fetch(withLanguage("/api/admin/profile"), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(submitData),

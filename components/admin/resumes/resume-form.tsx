@@ -10,8 +10,9 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { useResumes } from "@/lib/hooks/use-resumes"
+import { useResumesByLanguage } from "@/lib/hooks/use-resumes"
 import { Resume } from "@prisma/client"
+import { useAdminContentLanguage } from "@/lib/context/AdminContentLanguageProvider"
 
 interface ResumeFormProps {
   onClose: () => void
@@ -19,7 +20,8 @@ interface ResumeFormProps {
 }
 
 export function ResumeForm({ onClose, resume }: ResumeFormProps) {
-  const { mutate } = useResumes()
+  const { language, withLanguage } = useAdminContentLanguage()
+  const { mutate } = useResumesByLanguage(language)
   const [isLoading, setIsLoading] = useState(false)
 
   const formatDate = (date: Date | null | undefined) => {
@@ -47,7 +49,7 @@ export function ResumeForm({ onClose, resume }: ResumeFormProps) {
     }
     
     try {
-      const url = resume ? `/api/resumes/${resume.id}` : "/api/resumes"
+      const url = resume ? withLanguage(`/api/resumes/${resume.id}`) : withLanguage("/api/resumes")
       const method = resume ? "PUT" : "POST"
 
       const response = await fetch(url, {
@@ -55,7 +57,7 @@ export function ResumeForm({ onClose, resume }: ResumeFormProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, language }),
       })
 
       if (!response.ok) {

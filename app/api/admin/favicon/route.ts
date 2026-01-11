@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { uploadToS3, deleteFromS3 } from "@/lib/utils/s3";
+import { getContentLanguageFromRequest } from "@/lib/validations/contentLanguage";
 
 export async function POST(request: Request) {
   try {
+    const language = getContentLanguageFromRequest(request);
     const formData = await request.formData();
     const file = formData.get("file") as File;
     
@@ -22,7 +24,7 @@ export async function POST(request: Request) {
     }
 
     // Get existing settings
-    let settings = await prisma.settings.findFirst();
+    let settings = await prisma.settings.findFirst({ where: { language } });
     
     // If favicon exists, delete old file from S3
     if (settings?.favicon) {
@@ -48,6 +50,7 @@ export async function POST(request: Request) {
     } else {
       settings = await prisma.settings.create({
         data: {
+          language,
           websiteTitle: 'Resume Portfolio',
           favicon: fileUrl,
         },

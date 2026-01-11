@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { getContentLanguageFromRequest, contentLanguageSchema } from "@/lib/validations/contentLanguage";
 
 export const dynamic = "force-dynamic";
 
 const createCallMeSchema = z.object({
+  language: contentLanguageSchema.optional(),
   label: z.string().min(1),
   type: z.enum(["text", "link"]),
   iconName: z.string().min(1),
@@ -25,9 +27,11 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const label = searchParams.get("label") || undefined;
+    const language = getContentLanguageFromRequest(request);
 
     const callMeItems = await callMeDelegate.findMany({
       where: {
+        language,
         ...(label ? { label: { contains: label } } : {}),
       },
       orderBy: { order: "asc" },
@@ -51,6 +55,7 @@ export async function POST(request: Request) {
       );
     }
 
+    const language = getContentLanguageFromRequest(request);
     const json = await request.json();
     const parsed = createCallMeSchema.safeParse(json);
     if (!parsed.success) {
@@ -61,6 +66,7 @@ export async function POST(request: Request) {
     }
 
     const maxOrderItem = await callMeDelegate.findFirst({
+      where: { language: parsed.data.language ?? language },
       orderBy: { order: "desc" },
       select: { order: true },
     });
@@ -69,6 +75,7 @@ export async function POST(request: Request) {
     const callMeItem = await callMeDelegate.create({
       data: {
         ...parsed.data,
+        language: parsed.data.language ?? language,
         order: newOrder,
         isPublished: false,
       },

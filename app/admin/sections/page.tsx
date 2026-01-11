@@ -13,14 +13,16 @@ import {
 } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
 import useSWR from 'swr';
+import { useAdminContentLanguage } from '@/lib/context/AdminContentLanguageProvider';
 
 export default function SectionsManagePage() {
   const router = useRouter();
-  const { data: sections, mutate } = useSWR('/api/sections');
+  const { withLanguage } = useAdminContentLanguage();
+  const { data: sections, mutate } = useSWR(withLanguage('/api/sections'));
 
   const toggleSection = async (id: string, enabled: boolean) => {
     try {
-      await fetch(`/api/sections/${id}`, {
+      await fetch(withLanguage(`/api/sections/${id}`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isEnabled: enabled }),

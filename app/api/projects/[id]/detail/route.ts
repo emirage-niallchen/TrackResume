@@ -1,21 +1,24 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getContentLanguageFromRequest } from "@/lib/validations/contentLanguage";
 
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
+    const language = getContentLanguageFromRequest(request);
     const projectId = params.id;
     
     // 获取项目信息
-    const project = await prisma.project.findUnique({
-      where: { id: projectId },
+    const project = await prisma.project.findFirst({
+      where: { id: projectId, language },
       include: {
-        images: true,
-        links: true,
+        images: { where: { language } },
+        links: { where: { language } },
         tags: {
+          where: { tag: { language } },
           include: {
             tag: true
           }

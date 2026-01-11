@@ -2,10 +2,13 @@
 
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
+import { getContentLanguageFromRequest } from '@/lib/validations/contentLanguage';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const language = getContentLanguageFromRequest(request);
     const sections = await prisma.resumeSection.findMany({
+      where: { language },
       orderBy: { order: 'asc' },
     });
     return NextResponse.json(sections);

@@ -1,12 +1,14 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getContentLanguageFromRequest } from '@/lib/validations/contentLanguage';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    console.log('Fetching website metadata for layout');
+    const language = getContentLanguageFromRequest(request);
+    console.log('Website metadata: fetch', { language });
     
     // 获取网站设置
-    const settings = await prisma.settings.findFirst();
+    const settings = await prisma.settings.findFirst({ where: { language } });
     
     if (!settings) {
       // 如果没有设置，返回默认值
@@ -19,7 +21,7 @@ export async function GET() {
     // Return favicon URL (already S3 URL, or default)
     const faviconUrl = settings.favicon || '/favicon.svg';
     
-    console.log('Metadata fetched successfully', { 
+    console.log('Website metadata: fetched', { 
       hasTitle: !!settings.websiteTitle,
       hasFavicon: !!settings.favicon 
     });
@@ -29,7 +31,7 @@ export async function GET() {
       favicon: faviconUrl,
     });
   } catch (error) {
-    console.error('Failed to fetch metadata:', error);
+    console.error('Website metadata: fetch failed', error);
     
     // 返回默认值作为fallback
     return NextResponse.json({

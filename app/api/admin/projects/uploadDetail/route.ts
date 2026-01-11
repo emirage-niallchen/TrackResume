@@ -3,9 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { uploadToS3, deleteFromS3 } from "@/lib/utils/s3";
 import { extname } from "path";
 import { prisma } from "@/lib/prisma";
+import { getContentLanguageFromRequest } from "@/lib/validations/contentLanguage";
 
 export async function POST(req: NextRequest) {
   try {
+    const language = getContentLanguageFromRequest(req);
     const formData = await req.formData();
     const file = formData.get("file") as File;
     const projectId = formData.get("id") as string;
@@ -14,9 +16,12 @@ export async function POST(req: NextRequest) {
     }
 
     // 查询项目，准备清理旧的详情文件
-    const project = await prisma.project.findUnique({
-      where: { id: projectId }
+    const project = await prisma.project.findFirst({
+      where: { id: projectId, language }
     });
+    if (!project) {
+      return NextResponse.json({ error: "项目不存在" }, { status: 404 });
+    }
 
     // 如果已有详情路径，先尝试从 S3 删除旧文件
     if (project?.detail) {

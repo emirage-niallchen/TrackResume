@@ -7,6 +7,7 @@ import { useState } from "react";
 import useSWR from "swr";
 import { formatBytes } from "@/lib/utils/formatBytes";
 import { formatDate } from "@/lib/utils/dateFormatter";
+import { useAdminContentLanguage } from "@/lib/context/AdminContentLanguageProvider";
 import {
   Table,
   TableBody,
@@ -41,9 +42,10 @@ interface AttachmentFile {
 export default function AttachmentsPage() {
   const [uploading, setUploading] = useState(false);
   const [editingAttachment, setEditingAttachment] = useState<AttachmentFile | null>(null);
+  const { withLanguage } = useAdminContentLanguage();
   
   const { data: files, mutate, error, isLoading } = useSWR<AttachmentFile[]>(
-    "/api/admin/attachments", 
+    withLanguage("/api/admin/attachments"), 
     (url: string) => fetch(url, {
       method: 'GET',
       headers: {
@@ -61,7 +63,7 @@ export default function AttachmentsPage() {
     formData.append("tags", JSON.stringify([]));
 
     try {
-      const res = await fetch("/api/admin/attachments", {
+      const res = await fetch(withLanguage("/api/admin/attachments"), {
         method: "POST",
         body: formData
       });
@@ -80,7 +82,7 @@ export default function AttachmentsPage() {
 
   const handleDelete = async (id: string) => {
     try {
-      const res = await fetch(`/api/admin/attachments/${id}`, {
+      const res = await fetch(withLanguage(`/api/admin/attachments/${id}`), {
         method: "DELETE"
       });
 
@@ -96,7 +98,7 @@ export default function AttachmentsPage() {
 
   const handleTogglePublish = async (id: string, isPublished: boolean) => {
     try {
-      const res = await fetch(`/api/admin/attachments/${id}`, {
+      const res = await fetch(withLanguage(`/api/admin/attachments/${id}`), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json"
@@ -159,7 +161,7 @@ export default function AttachmentsPage() {
                 formData.append("tags", JSON.stringify([]));
                 
                 try {
-                  const res = await fetch("/api/admin/attachments", {
+                  const res = await fetch(withLanguage("/api/admin/attachments"), {
                     method: "POST",
                     body: formData
                   });

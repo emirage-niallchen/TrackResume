@@ -1,6 +1,8 @@
 'use client';
 import { useSearchParams } from 'next/navigation';
 import useSWR from 'swr';
+import { useTranslation } from 'react-i18next';
+import { toContentLanguage, withContentLanguageParam } from '@/lib/utils';
 import { HeroSection } from "@/components/sections/hero-section";
 import { ResumeTimeline } from "@/components/sections/resume-timeline";
 import { ProjectsShowcase } from "@/components/sections/projects-showcase";
@@ -8,6 +10,7 @@ import { TechStackGrid } from "@/components/sections/tech-stack-grid";
 import { ContactSection } from "@/components/sections/contact-section";
 import { SectionSkeleton } from "@/components/ui/section-skeleton";
 import { FooterSection } from "@/components/sections/footer-section";
+import LanguageToggle from '@/components/common/LanguageToggle';
 
 
 
@@ -55,64 +58,67 @@ const PageNavigation = ({ items }: { items: NavItem[] }) => {
 };
 
 export default function HomePage() {
+  const { t, i18n } = useTranslation();
   const searchParams = useSearchParams();
   const tags = searchParams.get('tags') || undefined;
+  const language = toContentLanguage(i18n.resolvedLanguage);
   
   // 使用SWR分别获取各个部分的数据
   const { data: profileData, error: profileError } = useSWR(
-    `/api/profile`, 
+    withContentLanguageParam(`/api/profile`, language),
     fetcher
   );
 
   
   const { data: projectsData, error: projectsError } = useSWR(
-    `/api/projects${buildQuery('tags', tags)}`, 
+    withContentLanguageParam(`/api/projects${buildQuery('tags', tags)}`, language),
     fetcher
   );
 
   
   const { data: techsData, error: techsError } = useSWR(
-    `/api/techs${buildQuery('tags', tags)}`,
+    withContentLanguageParam(`/api/techs${buildQuery('tags', tags)}`, language),
     fetcher
   );
   
   const { data: customFieldsData, error: customFieldsError } = useSWR(
-    `/api/custom-fields${buildQuery('tags', tags)}`,
+    withContentLanguageParam(`/api/custom-fields${buildQuery('tags', tags)}`, language),
     fetcher
   );
   
   const { data: resumesData, error: resumesError } = useSWR(
-    `/api/resumes${buildQuery('tags', tags)}`, 
+    withContentLanguageParam(`/api/resumes${buildQuery('tags', tags)}`, language),
     fetcher
   );
   
   const { data: filesData, error: filesError } = useSWR(
-    `/api/files${buildQuery('tags', tags)}`, 
+    withContentLanguageParam(`/api/files${buildQuery('tags', tags)}`, language),
     fetcher
   );
   
   // 导航项配置
   const navItems: NavItem[] = [
-    { id: 'hero-section', title: '基础信息' },
-    { id: 'resume-timeline', title: '简历时间线' },
-    { id: 'projects-showcase', title: '项目展示' },
-    { id: 'tech-stack', title: '技术栈' },
-    { id: 'contact-section', title: '联系方式' },
+    { id: 'hero-section', title: t('home.nav.basic') },
+    { id: 'resume-timeline', title: t('home.nav.timeline') },
+    { id: 'projects-showcase', title: t('home.nav.projects') },
+    { id: 'tech-stack', title: t('home.nav.tech') },
+    { id: 'contact-section', title: t('home.nav.contact') },
   ];
   
 
   return (
     <main className="min-h-screen flex flex-col">
+      <LanguageToggle />
       {/* 页面导航 */}
       <PageNavigation items={navItems} />
       
       {/* 基础信息展示区域 */}
-      {profileData ? (
+      {profileData?.admin ? (
         <div id="hero-section">
           <HeroSection adminData={profileData.admin} customFields={profileData.customFields} files={filesData || []}/>
         </div>
       ) : profileError ? (
-        <div className="text-center py-8">获取个人信息失败</div>
+        <div className="text-center py-8">{t('home.error.profileFetchFailed')}</div>
       ) : (
         <SectionSkeleton height="300px" />
       )}

@@ -2,12 +2,21 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getContentLanguageFromRequest } from "@/lib/validations/contentLanguage";
 
 export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
+    const language = getContentLanguageFromRequest(request);
+    const existing = await prisma.customField.findFirst({
+      where: { id: params.id, language },
+      select: { id: true },
+    });
+    if (!existing) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
     const data = await request.json();
     const field = await prisma.customField.update({
       where: { id: params.id },
@@ -27,6 +36,14 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const language = getContentLanguageFromRequest(request);
+    const existing = await prisma.customField.findFirst({
+      where: { id: params.id, language },
+      select: { id: true },
+    });
+    if (!existing) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
     await prisma.customField.delete({
       where: { id: params.id },
     });
@@ -44,8 +61,9 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  const field = await prisma.customField.findUnique({
-    where: { id: params.id },
+  const language = getContentLanguageFromRequest(request);
+  const field = await prisma.customField.findFirst({
+    where: { id: params.id, language },
   });
   return NextResponse.json(field);
 }

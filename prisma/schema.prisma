@@ -7,8 +7,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum ContentLanguage {
+  zh
+  en
+}
+
 model Link {
   id        String   @id @default(cuid())
+  language  ContentLanguage @default(zh)
   type      String
   content   String
   description String   // 自定义描述文本
@@ -17,6 +23,7 @@ model Link {
 }
 model Admin {
   id        String   @id @default(cuid())
+  language  ContentLanguage @default(zh)
   username  String   @unique
   name      String?
   email     String?   @unique
@@ -31,6 +38,7 @@ model Admin {
 
 model Settings {
   id        String   @id @default(cuid())
+  language  ContentLanguage @default(zh)
   websiteTitle String?  // 网站标题
   favicon String?  @db.Text  // favicon URL (S3存储)
   createdAt DateTime @default(now())
@@ -38,6 +46,7 @@ model Settings {
 }
 model CustomField {
   id          String   @id @default(cuid())
+  language    ContentLanguage @default(zh)
   label       String   // 字段名称，如"GitHub"、"博客"
   value       String   // 字段值
   type        String   // 字段类型：text/link/card
@@ -50,6 +59,7 @@ model CustomField {
 
 model File {
   id          String     @id @default(cuid())
+  language    ContentLanguage @default(zh)
   name        String   
   path        String   // 存储路径
   type        String   // 文件类型 (MIME type)
@@ -62,6 +72,7 @@ model File {
 
 model Location {
   id          String   @id @default(cuid())
+  language    ContentLanguage @default(zh)
   latitude    Float    // 纬度
   longitude   Float    // 经度
   address     String   // 地址描述
@@ -72,7 +83,8 @@ model Location {
 
 model Tech {
   id          String       @id @default(cuid())
-  name        String       @unique
+  language    ContentLanguage @default(zh)
+  name        String
   description String
   icon        String?      // 图标URL (S3存储)
   link        String?
@@ -82,11 +94,14 @@ model Tech {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   tags        TechTag[]
+
+  @@unique([name, language])
 }
 
 model Tag {
   id          String       @id @default(cuid())
-  name        String       @unique
+  language    ContentLanguage @default(zh)
+  name        String
   description String?
   color       String
   order       Int         @default(0)
@@ -97,10 +112,13 @@ model Tag {
   techs       TechTag[]
   projects    ProjectTag[]
   resumes     ResumeTag[]
+
+  @@unique([name, language])
 }
 
 model Project {
   id          String         @id @default(cuid())
+  language    ContentLanguage @default(zh)
   name        String    
   jobRole     String? // 职位
   jobTech     String? // 技术栈
@@ -119,6 +137,7 @@ model Project {
 
 model ProjectImage {
   id        String   @id @default(cuid())
+  language  ContentLanguage @default(zh)
   path       String   // 图片URL
   alt       String?  // 图片描述
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -129,6 +148,7 @@ model ProjectImage {
 
 model ProjectLink {
   id        String   @id @default(cuid())
+  language  ContentLanguage @default(zh)
   label     String   // 链接标签
   url       String   // 链接URL
   order     Int      @default(0)
@@ -140,7 +160,8 @@ model ProjectLink {
 
 model Page {
   id          String   @id @default(cuid())
-  slug        String   @unique  // URL 友好的路径，如 'about-me'
+  language    ContentLanguage @default(zh)
+  slug        String   // URL 友好的路径，如 'about-me'
   title       String   // 页面标题
   content     String   // MDX 内容
   path        String   // 文件在本地存储的路径
@@ -150,6 +171,8 @@ model Page {
   parentId    String?  // 父页面 ID，用于层级结构
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@unique([slug, language])
 }
 
 model FileTag {
@@ -196,7 +219,8 @@ model Inbox {
 
 model ResumeSection {
   id          String   @id @default(cuid())
-  name        String   @unique  // 部分名称，如 "projects", "techs", "about"
+  language    ContentLanguage @default(zh)
+  name        String   // 部分名称，如 "projects", "techs", "about"
   label       String   // 显示名称，如 "项目经历", "技术栈", "关于我"
   description String?  // 描述
   type        String   // 部分类型：basic(基本信息), list(列表), grid(网格), custom(自定义)
@@ -207,10 +231,13 @@ model ResumeSection {
   config      String?  // JSON 格式的额外配置
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@unique([name, language])
 }
 
 model Resume {
   id          String   @id @default(cuid())
+  language    ContentLanguage @default(zh)
   name        String   // 履历名称，如"工作经历"、"教育经历"
   description String   // 详细描述
   startTime   DateTime // 开始时间
@@ -239,6 +266,7 @@ model ResumeTag {
 
 model CallMe {
   id          String   @id @default(cuid())
+  language    ContentLanguage @default(zh)
   label       String   // 展示名称，如 "邮箱"、"GitHub"
   type        String   // text | link
   iconName    String   // lucide-react icon name, e.g. "Mail"

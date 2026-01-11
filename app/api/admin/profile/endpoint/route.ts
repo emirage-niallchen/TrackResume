@@ -1,11 +1,14 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getContentLanguageFromRequest } from '@/lib/validations/contentLanguage';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const language = getContentLanguageFromRequest(request);
 
     //只保留  字段 endpoint
     const admin = await prisma.admin.findFirst({
+      where: { language },
       select: { endpoint: true },
     });
 

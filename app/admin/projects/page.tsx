@@ -8,6 +8,7 @@ import { ProjectList } from "./components/ProjectList";
 import useSWR from "swr";
 import { Project } from "@prisma/client";
 import { ProjectVO } from "@/app/api/projects/route";
+import { useAdminContentLanguage } from "@/lib/context/AdminContentLanguageProvider";
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
@@ -20,7 +21,8 @@ const deleteProjectById = async (id: string) => {
 export default function ProjectsPage() {
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [editProject, setEditProject] = useState<ProjectVO | null>(null);
-  const { data: projects, mutate } = useSWR("/api/admin/projects", fetcher);
+  const { language, withLanguage } = useAdminContentLanguage();
+  const { data: projects, mutate } = useSWR(withLanguage("/api/admin/projects"), fetcher);
 
   console.log("projects 数据:", projects);
 
@@ -32,7 +34,8 @@ export default function ProjectsPage() {
   const handleDelete = async (projectId: string) => {
     if (window.confirm("确定要删除该项目吗？")) {
       try {
-        await deleteProjectById(projectId);
+        const res = await fetch(withLanguage(`/api/admin/projects/${projectId}`), { method: "DELETE" });
+        if (!res.ok) throw new Error("删除失败");
         mutate(); // 删除成功后刷新项目列表
       } catch (e) {
         alert("删除失败");

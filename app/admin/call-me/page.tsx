@@ -3,13 +3,15 @@
 import { CallMeForm, type CallMeFormValues } from "@/components/CallMe/CallMeForm";
 import { CallMeList } from "@/components/CallMe/CallMeList";
 import { toast } from "sonner";
+import { useAdminContentLanguage } from "@/lib/context/AdminContentLanguageProvider";
 
 export default function CallMePage() {
+  const { language, withLanguage } = useAdminContentLanguage();
   const handleCreate = async (values: CallMeFormValues) => {
-    const res = await fetch("/api/admin/call-me", {
+    const res = await fetch(withLanguage("/api/admin/call-me"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
+      body: JSON.stringify({ ...values, language }),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));

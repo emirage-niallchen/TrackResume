@@ -8,6 +8,7 @@ import { ProjectVO } from "@/app/api/projects/route";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useAdminContentLanguage } from "@/lib/context/AdminContentLanguageProvider";
 
 interface ProjectListProps {
   projects: ProjectVO[];
@@ -17,6 +18,7 @@ interface ProjectListProps {
 
 export function ProjectList({ projects, onEdit, onDelete }: ProjectListProps) {
   const router = useRouter();
+  const { language, withLanguage } = useAdminContentLanguage();
 
   if (!projects?.length) {
     return (
@@ -35,8 +37,9 @@ export function ProjectList({ projects, onEdit, onDelete }: ProjectListProps) {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("id", projectId);
+      formData.append("language", language);
       try {
-        const res = await fetch("/api/admin/projects/uploadDetail", {
+        const res = await fetch(withLanguage("/api/admin/projects/uploadDetail"), {
           method: "POST",
           body: formData
         });
